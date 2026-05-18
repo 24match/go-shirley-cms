@@ -1,0 +1,99 @@
+header {
+    background: #fff;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+    transition: 0.3s;
+}
+
+.nav-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+}
+
+.logo {
+    color: #0a5cad;
+    font-size: 26px;
+    font-weight: bold;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo span {
+    color: #06a499;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 35px;
+}
+
+.nav-menu a {
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    transition: 0.3s;
+    position: relative;
+}
+
+.nav-menu a:hover {
+    color: #0a5cad;
+}
+
+.nav-menu a::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #0a5cad;
+    transition: 0.3s;
+}
+
+.nav-menu a:hover::after {
+    width: 100%;
+}
+
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 5px;
+}
+
+.hamburger span {
+    width: 25px;
+    height: 3px;
+    background: #0a5cad;
+    border-radius: 3px;
+    transition: 0.3s;
+}
+
+.lang-switcher {
+    margin-left: 20px;
+}
+
+.lang-btn {
+    background: #0a5cad;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.lang-btn:hover {
+    background: #063a75;
+    transform: scale(1.05);
+}

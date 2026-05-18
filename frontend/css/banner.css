@@ -1,0 +1,68 @@
+.banner {
+    height: 100vh;
+    background: linear-gradient(135deg, rgba(10, 92, 173, 0.9) 0%, rgba(6, 58, 117, 0.85) 100%), url(https://neeko-copilot.bytedance.net/api/text2image?prompt=Modern%20medical%20device%20manufacturing%20factory%20interior%20with%20advanced%20equipment%20professional%20clean%20environment&image_size=landscape_16_9) center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    color: #fff;
+    margin-top: 70px;
+}
+
+.banner-text {
+    max-width: 700px;
+}
+
+.banner-text h1 {
+    font-size: 56px;
+    margin-bottom: 25px;
+    line-height: 1.15;
+    font-weight: 700;
+}
+
+.banner-text p {
+    font-size: 20px;
+    margin-bottom: 35px;
+    max-width: 600px;
+    opacity: 0.95;
+    line-height: 1.7;
+}
+
+.btn {
+    display: inline-block;
+    background: #fff;
+    color: #0a5cad;
+    padding: 14px 35px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+    margin-right: 15px;
+    border: 2px solid #fff;
+}
+
+.btn:hover {
+    background: transparent;
+    color: #fff;
+}
+
+.btn-blue {
+    background: #0a5cad;
+    color: #fff;
+    border-color: #0a5cad;
+}
+
+.btn-blue:hover {
+    background: #063a75;
+    border-color: #063a75;
+    color: #fff;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #fff;
+    border: 2px solid #fff;
+}
+
+.btn-outline:hover {
+    background: #fff;
+    color: #0a5cad;
+}

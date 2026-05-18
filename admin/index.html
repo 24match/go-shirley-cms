@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMS管理后台 - 医疗设备</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background: #f0f2f5; }
+        .container { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background: linear-gradient(180deg, #0a5cad 0%, #063a75 100%); color: white; padding: 25px 15px; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; bottom: 0; }
+        .sidebar-header { padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+        .sidebar-header h1 { font-size: 20px; font-weight: 600; }
+        .sidebar-header p { font-size: 12px; opacity: 0.7; margin-top: 5px; }
+        .nav-section { margin-bottom: 25px; }
+        .nav-section-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-left: 10px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 10px; margin-bottom: 5px; cursor: pointer; transition: 0.3s; color: rgba(255,255,255,0.9); text-decoration: none; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.15); color: white; }
+        .nav-item .icon { font-size: 18px; }
+        .nav-item .text { font-size: 14px; font-weight: 500; }
+        .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-footer button { width: 100%; background: rgba(255,255,255,0.1); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 14px; transition: 0.3s; }
+        .sidebar-footer button:hover { background: rgba(255,255,255,0.2); }
+        
+        /* Main Content */
+        .main-content { flex: 1; margin-left: 260px; min-height: 100vh; }
+        .header { background: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: sticky; top: 0; z-index: 100; }
+        .header h2 { font-size: 22px; color: #0a5cad; font-weight: 600; }
+        .header .user-info { display: flex; align-items: center; gap: 15px; }
+        .header .user-info span { color: #666; font-size: 14px; }
+        
+        /* Page Content */
+        .page-content { padding: 30px; }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Module Card */
+        .module-card { background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; margin-bottom: 25px; }
+        .module-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0; }
+        .module-card-header h3 { font-size: 18px; color: #0a5cad; font-weight: 600; }
+        .module-card-header .toggle-switch { display: flex; align-items: center; gap: 10px; }
+        .toggle-switch label { font-size: 14px; color: #666; }
+        .toggle { position: relative; width: 50px; height: 26px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 26px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; }
+        input:checked + .toggle-slider { background: linear-gradient(135deg, #0a5cad 0%, #063a75 100%); }
+        input:checked + .toggle-slider:before { transform: translateX(24px); }
+        
+        /* Form Styles */
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 10px; font-weight: 600; color: #333; font-size: 14px; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; transition: 0.3s; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #0a5cad; box-shadow: 0 0 0 3px rgba(10,92,173,0.1); }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        
+        /* Image Upload */
+        .image-upload-area { border: 2px dashed #ddd; border-radius: 15px; padding: 30px; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 20px; }
+        .image-upload-area:hover, .image-upload-area.dragover { border-color: #0a5cad; background: #f8fafc; }
+        .image-upload-area img { max-width: 200px; max-height: 150px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
+        .image-upload-area span { color: #0a5cad; font-weight: 600; }
+        .image-upload-area p { color: #666; margin-top: 8px; font-size: 14px; }
+        .image-upload-area input[type="file"] { display: none; }
+        
+        /* Buttons */
+        .btn { padding: 14px 30px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.3s; }
+        .btn-primary { background: linear-gradient(135deg, #0a5cad 0%, #063a75 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(10,92,173,0.3); }
+        .btn-secondary { background: #f0f2f5; color: #333; border: 1px solid #ddd; }
+        .btn-secondary:hover { background: #e8eaed; }
+        .btn-danger { background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%); color: white; }
+        
+        /* Product Items Grid */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; margin-top: 25px; }
+        .product-item { background: #f8fafc; border-radius: 15px; padding: 20px; border: 1px solid #e0e0e0; }
+        .product-item img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
+        .product-item h4 { font-size: 16px; color: #0a5cad; margin-bottom: 10px; }
+        .product-item p { color: #666; font-size: 13px; line-height: 1.6; margin-bottom: 15px; }
+        .product-item .actions { display: flex; gap: 10px; }
+        .product-item .actions button { flex: 1; padding: 10px; font-size: 12px; border-radius: 6px; }
+        
+        /* Content Items */
+        .content-item-list { margin-top: 25px; }
+        .content-item { display: flex; align-items: center; gap: 20px; background: #f8fafc; border-radius: 15px; padding: 20px; margin-bottom: 15px; }
+        .content-item .icon { width: 60px; height: 60px; background: #0a5cad; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
+        .content-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; }
+        .content-item .info { flex: 1; }
+        .content-item .info h4 { color: #0a5cad; margin-bottom: 5px; }
+        .content-item .info p { color: #666; font-size: 14px; }
+        .content-item .actions button { padding: 8px 16px; font-size: 12px; border-radius: 6px; }
+        
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: linear-gradient(135deg, #0a5cad 0%, #063a75 100%); color: white; border-radius: 15px; padding: 25px; text-align: center; }
+        .stat-card .number { font-size: 42px; font-weight: 700; display: block; }
+        .stat-card .label { font-size: 14px; opacity: 0.9; margin-top: 5px; }
+        
+        /* Login Page */
+        .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #0a5cad 0%, #063a75 100%); }
+        .login-box { background: white; padding: 50px; border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); width: 420px; }
+        .login-box h2 { text-align: center; margin-bottom: 35px; color: #0a5cad; font-size: 28px; font-weight: 600; }
+        
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal h3 { color: #0a5cad; margin-bottom: 25px; font-size: 20px; }
+        .modal .btn-group { display: flex; gap: 15px; margin-top: 25px; }
+        .modal .btn-group button { flex: 1; }
+        
+        /* Toast Notification */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: #28a745; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: none; z-index: 2000; }
+        .toast.show { display: block; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast.error { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <h2>CMS管理后台</h2>
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密码">
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="login()">登录</button>
+        </div>
+    </div>
+
+    <!-- Admin Page -->
+    <div id="adminPage" style="display:none">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🏥 CMS管理后台</h1>
+                <p>医疗设备企业网站</p>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">页面模块</div>
+                <div class="nav-item" onclick="showSection('banner')">
+                    <span class="icon">🏠</span>
+                    <span class="text">首页Banner</span>
+                </div>
+                <div class="nav-item" onclick="showSection('about')">
+                    <span class="icon">👥</span>
+                    <span class="text">关于我们</span>
+                </div>
+                <div class="nav-item" onclick="showSection('products')">
+                    <span class="icon">📦</span>
+                    <span class="text">产品展示</span>
+                </div>
+                <div class="nav-item" onclick="showSection('factory')">
+                    <span class="icon">🏭</span>
+                    <span class="text">工厂实力</span>
+                </div>
+                <div class="nav-item" onclick="showSection('advantage')">
+                    <span class="icon">⭐</span>
+                    <span class="text">核心优势</span>
+                </div>
+                <div class="nav-item" onclick="showSection('events')">
+                    <span class="icon">🎯</span>
+                    <span class="text">展会信息</span>
+                </div>
+                <div class="nav-item" onclick="showSection('contact')">
+                    <span class="icon">📞</span>
+                    <span class="text">联系我们</span>
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">系统管理</div>
+                <div class="nav-item" onclick="showSection('system')">
+                    <span class="icon">⚙️</span>
+                    <span class="text">系统设置</span>
+                </div>
+                <div class="nav-item" onclick="showSection('lang')">
+                    <span class="icon">🌐</span>
+                    <span class="text">多语言配置</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <button onclick="logout()">退出登录</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h2 id="pageTitle">首页Banner配置</h2>
+                <div class="user-info">
+                    <span>管理员</span>
+                </div>
+            </div>
+            
+            <div class="page-content">
+                <!-- Banner Section -->
+                <div id="bannerSection" class="section active">
+                    <div class="module-card">
+                        <div class="module-card-header">
+                            <h3>🏠 首页Banner配置</h3>
+                            <div class="toggle-switch">
+                                <label>启用模块</label>
+                                <label class="toggle">
+                                    <input type="checkbox" id="bannerEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="image-upload-area" onclick="document.getElementById('bannerImageInput').click()">
+                            <img id="bannerPreview" src="" style="display:none;">
+                            <div id="bannerPlaceholder">
+                                <span>📁 点击上传Banner图片</span>
+                                <p>支持 JPG、PNG 格式，建议尺寸 1920x1080</p>
+                            </div>
+                            <input type="file" id="bannerImageInput" accept="image/*" onchange="previewBannerImage(this)">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>主标题</label>
+                                <input type="text" id="bannerTitle" placeholder="输入Banner主标题">
+                            </div>
+                            <div class="form-group">
+                                <label>副标题</label>
+                                <input type="text" id="bannerSubtitle" placeholder="输入Banner副标题">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>描述文字</label>
+                            <textarea id="bannerContent" rows="4" placeholder="输入Banner描述内容"></textarea>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="saveModuleConfig('banner')">保存配置</button>
+                    </div>
+                </div>
+
+                <!-- About Section -->
+                <div id="aboutSection" class="section">
+                    <div class="module-card">
+                        <div class="module-card-header">
+                            <h3>👥 关于我们配置</h3>
+                            <div class="toggle-switch">
+                                <label>启用模块</label>
+                                <label class="toggle">
+                                    <input type="checkbox" id="aboutEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="image-upload-area" onclick="document.getElementById('aboutImageInput').click()">
+                            <img id="aboutPreview" src="" style="display:none;">
+                            <div id="aboutPlaceholder">
+                                <span>📁 点击上传关于我们图片</span>
+                                <p>支持 JPG、PNG 格式</p>
+                            </div>
+                            <input type="file" id="aboutImageInput" accept="image/*" onchange="previewAboutImage(this)">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>主标题</label>
+                                <input type="text" id="aboutTitle" placeholder="输入关于我们主标题">
+                            </div>
+                            <div class="form-group">
+                                <label>副标题</label>
+                                <input type="text" id="aboutSubtitle" placeholder="输入关于我们副标题">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>左侧标题</label>
+                            <input type="text" id="aboutLeftTitle" placeholder="输入左侧区域标题">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>详细内容（支持多段落，用空行分隔）</label>
+                            <textarea id="aboutContent" rows="8" placeholder="在此输入关于我们的详细介绍...&#10;&#10;支持多个段落，段落之间用空行分隔"></textarea>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="saveModuleConfig('about')">保存配置</button>
+                    </div>
+                </div>
+
+                <!-- Products Section -->
+                <div id="productsSection" class="section">
+                    <div class="module-card">
+                        <div class="module-card-header">
+                            <h3>📦 产品展示配置</h3>
+                            <div class="toggle-switch">
+                                <label>启用模块</label>
+                                <label class="toggle">
+                                    <input type="checkbox" id="productsEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>模块标题</label>
+                                <input type="text" id="productsTitle" placeholder="输入产品模块标题">
+                            </div>
+                            <div class="form-group">
+                                <label>显示数量</label>
+                                <input type="number" id="productsCount" value="6" min="1" max="12">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" style="margin-bottom:25px;" onclick="saveModuleConfig('products')">保存模块配置</button>
+                        
+                        <div style="padding-top:20px;border-top:1px solid #f0f0f0;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                                <h4 style="color:#0a5cad;">产品列表</h4>
+                                <button class="btn btn-secondary" onclick="addProductItem()">+ 添加产品</button>
+                            </div>
+                            <div id="productsList">
+                                <div style="text-align:center;color:#999;padding:50px;">
+                                    <div style="font-size:48px;margin-bottom:15px;">📦</div>
+                                    <p>暂无产品数据，请添加产品</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Factory Section -->
+                <div id="factorySection" class="section">
+                    <div class="module-card">
+                        <div class="module-card-header">
+                            <h3>🏭 工厂实力配置</h3>
+                            <div class="toggle-switch">
+                                <label>启用模块</label>
+                                <label class="toggle">
+                                    <input type="checkbox" id="factoryEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>模块标题</label>
+                                <input type="text" id="factoryTitle" placeholder="输入工厂实力模块标题">
+                            </div>
+                            <div class="form-group">
+                                <label>副标题</label>
+                                <input type="text" id="factorySubtitle" placeholder="输入副标题">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" style="margin-bottom:25px;" onclick="saveModuleConfig('factory')">保存模块配置</button>
+                        
+                        <div style="padding-top:20px;border-top:1px solid #f0f0f0;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                                <h4 style="color:#0a5cad;">工厂优势项目</h4>
+                                <button class="btn btn-secondary" onclick="addFactoryItem()">+ 添加项目</button>
+                            </div>
+                            <div id="factoryList">
+                                <div style="text-align:center;color:#999;padding:50px;">
+                                    <div style="font-size:48px;margin-bottom:15px;">🏭</div>
+                                    <p>暂无工厂优势项目，请添加</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advantage Section -->
+                <div id="advantageSection" class="section">
+                    <div class="module-card">
+                        <div class="module-card-header">
+                            <h3>⭐ 核心优势配置</h3>
+                            <div class="toggle-switch">
+                                <label>启用模块</label>
+                                <label class="toggle">
+                                    <input type="checkbox" id="advantageEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>模块标题</label>
+                                <input type="text" id="advantageTitle" placeholder="输入核心优势模块标题">
+                            </div>
+                            <div class="form-group">
+                                <label>副标题</label>
+                                <input type="text" id="advantageSubtitle" placeholder="输入副标题">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" style="margin-bottom:25px;" onclick="saveModuleConfig('advantage')">保存模块配置</button>
+                        
+                        <div style="padding-top:20px;border-top:1px solid #f0f0f0;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                                <h4 style="color:#0a5cad;">核心优势项目</h4>
+                                <button class="btn btn-secondary" onclick="addAdvantageItem()">+ 添加项目</button>
+                            </div>
+                            <div id="advantageList">
+                                <div style="text-align:center;color:#999;padding:50px;">
+                                    <div style="font-size:48px;margin-bottom:15px;">⭐</div>
+                                    <p>暂无核心优势项目，请添加</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events Section -->
+                <div id="eventsSection" class="section">
+                    <div class="module-card">
+                        <div class="module-card-header">
+                            <h3>🎯 展会信息配置</h3>
+                            <div class="toggle-switch">
+                                <label>启用模块</label>
+                                <label class="toggle">
+                                    <input type="checkbox" id="eventsEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>展会名称</label>
+                                <input type="text" id="eventsName" placeholder="输入展会名称">
+                            </div>
+                            <div class="form-group">
+                                <label>展位号</label>
+                                <input type="text" id="eventsBooth" placeholder="输入展位号">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>开始日期</label>
+                                <input type="date" id="eventsStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label>结束日期</label>
+                                <input type="date" id="eventsEndDate">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>展会地点</label>
+                            <input type="text" id="eventsLocation" placeholder="输入展会地点">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>展会描述</label>
+                            <textarea id="eventsDescription" rows="4" placeholder="输入展会描述"></textarea>
+                        </div>
+                        
+                        <div style="background:#f0f7ff;padding:20px;border-radius:10px;margin-bottom:20px;">
+                            <h4 style="color:#0a5cad;margin-bottom:15px;">🖼️ 左侧图片区域配置</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>图标（Emoji）</label>
+                                    <input type="text" id="eventsIcon" placeholder="例如：🏥">
+                                </div>
+                                <div class="form-group">
+                                    <label>左侧标题</label>
+                                    <input type="text" id="eventsLeftTitle" placeholder="输入左侧区域标题">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>左侧副标题</label>
+                                <input type="text" id="eventsLeftSubtitle" placeholder="输入左侧区域副标题">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="saveModuleConfig('events')">保存配置</button>
+                    </div>
+                </div>
+
+                <!-- Contact Section -->
+                <div id="contactSection" class="section">
+                    <div class="module-card">
+                        <div class="module-card-header">
+                            <h3>📞 联系我们配置</h3>
+                            <div class="toggle-switch">
+                                <label>启用模块</label>
+                                <label class="toggle">
+                                    <input type="checkbox" id="contactEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>邮箱</label>
+                                <input type="email" id="contactEmail" placeholder="输入邮箱地址">
+                            </div>
+                            <div class="form-group">
+                                <label>电话</label>
+                                <input type="text" id="contactPhone" placeholder="输入联系电话">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>WhatsApp</label>
+                                <input type="text" id="contactWhatsApp" placeholder="输入WhatsApp号码">
+                            </div>
+                            <div class="form-group">
+                                <label>地址</label>
+                                <input type="text" id="contactAddress" placeholder="输入公司地址">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="saveModuleConfig('contact')">保存配置</button>
+                    </div>
+                </div>
+
+                <!-- System Section -->
+                <div id="systemSection" class="section">
+                    <div class="module-card">
+                        <div class="module-card-header">
+                            <h3>🏷️ 品牌配置</h3>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>品牌名称（如：MEDICAL PRO）</label>
+                                <input type="text" id="brandName" placeholder="输入品牌名称">
+                            </div>
+                            <div class="form-group">
+                                <label>副标题颜色</label>
+                                <input type="color" id="brandSuffixColor" style="height:45px;padding:5px;">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="saveBrandConfig()">保存品牌配置</button>
+                    </div>
+                    
+                    <div class="module-card">
+                        <div class="module-card-header">
+                            <h3>📊 统计数据配置</h3>
+                        </div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <span class="number" id="statsYears">15+</span>
+                                <span class="label">年行业经验</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="number" id="statsProducts">200+</span>
+                                <span class="label">产品品类</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="number" id="statsCountries">80+</span>
+                                <span class="label">服务国家</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="number" id="statsClients">1000+</span>
+                                <span class="label">客户数量</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>年份数据</label>
+                                <input type="text" id="statsYearsInput" placeholder="例如：15+">
+                            </div>
+                            <div class="form-group">
+                                <label>产品数量</label>
+                                <input type="text" id="statsProductsInput" placeholder="例如：200+">
+                            </div>
+                            <div class="form-group">
+                                <label>服务国家</label>
+                                <input type="text" id="statsCountriesInput" placeholder="例如：80+">
+                            </div>
+                            <div class="form-group">
+                                <label>客户数量</label>
+                                <input type="text" id="statsClientsInput" placeholder="例如：1000+">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="saveStatsConfig()">保存统计配置</button>
+                    </div>
+                </div>
+
+                <!-- Language Section -->
+                <div id="langSection" class="section">
+                    <div class="module-card">
+                        <div class="module-card-header">
+                            <h3>🌐 多语言文案管理</h3>
+                            <button class="btn btn-secondary" onclick="addLangText()">+ 添加文案</button>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>筛选模块</label>
+                            <select id="langModuleSelect" onchange="loadLangTexts()" style="max-width:300px;">
+                                <option value="">全部模块</option>
+                                <option value="nav">导航</option>
+                                <option value="banner">Banner</option>
+                                <option value="stats">统计</option>
+                                <option value="about">关于我们</option>
+                                <option value="products">产品</option>
+                                <option value="factory">工厂实力</option>
+                                <option value="advantage">核心优势</option>
+                                <option value="events">展会</option>
+                                <option value="contact">联系我们</option>
+                                <option value="footer">页脚</option>
+                            </select>
+                        </div>
+                        
+                        <div id="langList">
+                            <div style="text-align:center;color:#999;padding:50px;">
+                                <div style="font-size:48px;margin-bottom:15px;">📝</div>
+                                <p>暂无文案数据，请添加文案</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal">
+            <h3 id="productModalTitle">添加产品</h3>
+            <input type="hidden" id="productId">
+            <input type="hidden" id="productImagePath">
+            
+            <div class="image-upload-area" onclick="document.getElementById('productImageInput').click()">
+                <img id="productPreview" src="" style="display:none;">
+                <div id="productPlaceholder">
+                    <span>📁 点击上传产品图片</span>
+                    <p>支持 JPG、PNG 格式</p>
+                </div>
+                <input type="file" id="productImageInput" accept="image/*" onchange="previewProductImage(this)">
+            </div>
+            
+            <div class="form-group">
+                <label>产品名称</label>
+                <input type="text" id="productName" placeholder="输入产品名称">
+            </div>
+            
+            <div class="form-group">
+                <label>产品描述</label>
+                <textarea id="productDescription" rows="3" placeholder="输入产品描述"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>排序顺序</label>
+                <input type="number" id="productSortOrder" value="0" min="0">
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="closeProductModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveProductItem()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="contentModal">
+        <div class="modal">
+            <h3 id="contentModalTitle">添加项目</h3>
+            <input type="hidden" id="contentItemId">
+            <input type="hidden" id="contentImagePath">
+            <input type="hidden" id="contentSectionType">
+            
+            <div class="image-upload-area" onclick="document.getElementById('contentImageInput').click()">
+                <img id="contentPreview" src="" style="display:none;">
+                <div id="contentPlaceholder">
+                    <span>📁 点击上传图标图片（可选）</span>
+                    <p>支持 JPG、PNG 格式</p>
+                </div>
+                <input type="file" id="contentImageInput" accept="image/*" onchange="previewContentImage(this)">
+            </div>
+            
+            <div class="form-group">
+                <label>标题</label>
+                <input type="text" id="contentTitle" placeholder="输入标题">
+            </div>
+            
+            <div class="form-group">
+                <label>描述</label>
+                <textarea id="contentDescription" rows="3" placeholder="输入描述"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>图标（Emoji，如无图片时显示）</label>
+                <input type="text" id="contentIcon" placeholder="例如：🏭">
+            </div>
+            
+            <div class="form-group">
+                <label>排序顺序</label>
+                <input type="number" id="contentSortOrder" value="0" min="0">
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="closeContentModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveContentItem()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="langModal">
+        <div class="modal">
+            <h3 id="langModalTitle">添加文案</h3>
+            <input type="hidden" id="langTextId">
+            
+            <div class="form-group">
+                <label>唯一标识 (Key)</label>
+                <input type="text" id="langKey" placeholder="例如：nav.home">
+            </div>
+            
+            <div class="form-group">
+                <label>模块</label>
+                <select id="langModule">
+                    <option value="nav">导航</option>
+                    <option value="banner">Banner</option>
+                    <option value="stats">统计</option>
+                    <option value="about">关于我们</option>
+                    <option value="products">产品</option>
+                    <option value="factory">工厂实力</option>
+                    <option value="advantage">核心优势</option>
+                    <option value="events">展会</option>
+                    <option value="contact">联系我们</option>
+                    <option value="footer">页脚</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>英文文案</label>
+                <textarea id="langEnText" rows="2" placeholder="输入英文文案"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>中文文案</label>
+                <textarea id="langZhText" rows="2" placeholder="输入中文文案"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>描述（可选）</label>
+                <input type="text" id="langDescription" placeholder="文案描述说明">
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="closeLangModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveLangText()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let token = localStorage.getItem('token');
+
+        async function apiFetch(url, options = {}) {
+            const res = await fetch(url, {
+                ...options,
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    ...options.headers
+                }
+            });
+            if (res.status === 401) {
+                handleAuthError();
+                throw new Error('Unauthorized');
+            }
+            return res;
+        }
+
+        function handleAuthError() {
+            localStorage.removeItem('token');
+            token = null;
+            showToast('登录已过期，请重新登录', 'error');
+            setTimeout(() => {
+                document.getElementById('adminPage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'flex';
+            }, 1500);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function checkAuth() {
+            if (token) {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('adminPage').style.display = 'flex';
+                loadAllConfigs();
+            }
+        }
+        checkAuth();
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const data = await res.json();
+            if (res.ok) {
+                token = data.token;
+                localStorage.setItem('token', token);
+                checkAuth();
+            } else {
+                showToast('登录失败: ' + data.error, 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            token = null;
+            document.getElementById('adminPage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
+        }
+
+        function showSection(name) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(name + 'Section').classList.add('active');
+            event.target.classList.add('active');
+            
+            const titles = {
+                banner: '首页Banner配置',
+                about: '关于我们配置',
+                products: '产品展示配置',
+                factory: '工厂实力配置',
+                advantage: '核心优势配置',
+                events: '展会信息配置',
+                contact: '联系我们配置',
+                system: '系统设置',
+                lang: '多语言配置'
+            };
+            document.getElementById('pageTitle').textContent = titles[name] || name;
+
+            if (name === 'products') loadProducts();
+            if (name === 'factory') loadContentItems('factory');
+            if (name === 'advantage') loadContentItems('advantage');
+            if (name === 'lang') loadLangTexts();
+        }
+
+        async function loadAllConfigs() {
+            try {
+                const [modulesRes, configRes] = await Promise.all([
+                    apiFetch('/api/admin/modules'),
+                    apiFetch('/api/admin/config')
+                ]);
+                
+                const modules = await modulesRes.json();
+                const configs = await configRes.json();
+                
+                const moduleMap = {};
+                modules.forEach(m => { moduleMap[m.moduleName] = m; });
+                
+                const configMap = {};
+                configs.forEach(c => {
+                    try {
+                        configMap[c.pageName] = JSON.parse(c.configData);
+                    } catch(e) {
+                        configMap[c.pageName] = {};
+                    }
+                });
+
+                // Banner
+                const banner = moduleMap['banner'] || configMap['banner'] || {};
+                document.getElementById('bannerEnabled').checked = banner.enabled !== false;
+                document.getElementById('bannerTitle').value = banner.title || '';
+                document.getElementById('bannerSubtitle').value = banner.subtitle || '';
+                document.getElementById('bannerContent').value = banner.content || '';
+                if (banner.imagePath) {
+                    document.getElementById('bannerPreview').src = '/uploads/' + banner.imagePath;
+                    document.getElementById('bannerPreview').style.display = 'block';
+                    document.getElementById('bannerPlaceholder').style.display = 'none';
+                }
+
+                // About
+                const about = moduleMap['about'] || configMap['about'] || {};
+                document.getElementById('aboutEnabled').checked = about.enabled !== false;
+                document.getElementById('aboutTitle').value = about.title || '';
+                document.getElementById('aboutSubtitle').value = about.subtitle || '';
+                document.getElementById('aboutLeftTitle').value = about.left_title || '';
+                document.getElementById('aboutContent').value = about.content || '';
+                if (about.imagePath) {
+                    document.getElementById('aboutPreview').src = '/uploads/' + about.imagePath;
+                    document.getElementById('aboutPreview').style.display = 'block';
+                    document.getElementById('aboutPlaceholder').style.display = 'none';
+                }
+
+                // Products
+                const products = moduleMap['products'] || configMap['products'] || {};
+                document.getElementById('productsEnabled').checked = products.enabled !== false;
+                document.getElementById('productsTitle').value = products.title || '';
+                document.getElementById('productsCount').value = products.show_count || 6;
+
+                // Factory
+                const factory = moduleMap['factory'] || {};
+                document.getElementById('factoryEnabled').checked = factory.enabled !== false;
+                document.getElementById('factoryTitle').value = factory.title || '';
+                document.getElementById('factorySubtitle').value = factory.subtitle || '';
+
+                // Advantage
+                const advantage = moduleMap['advantage'] || {};
+                document.getElementById('advantageEnabled').checked = advantage.enabled !== false;
+                document.getElementById('advantageTitle').value = advantage.title || '';
+                document.getElementById('advantageSubtitle').value = advantage.subtitle || '';
+
+                // Events
+                const events = moduleMap['events'] || configMap['event'] || {};
+                document.getElementById('eventsEnabled').checked = events.enabled !== false;
+                document.getElementById('eventsName').value = events.name || '';
+                document.getElementById('eventsBooth').value = events.booth || '';
+                document.getElementById('eventsStartDate').value = events.start_date || '';
+                document.getElementById('eventsEndDate').value = events.end_date || '';
+                document.getElementById('eventsLocation').value = events.location || '';
+                document.getElementById('eventsDescription').value = events.description || '';
+                document.getElementById('eventsIcon').value = events.left_icon || '🏥';
+                document.getElementById('eventsLeftTitle').value = events.left_title || '';
+                document.getElementById('eventsLeftSubtitle').value = events.left_subtitle || '';
+
+                // Contact
+                const contact = moduleMap['contact'] || configMap['contact'] || {};
+                document.getElementById('contactEnabled').checked = contact.enabled !== false;
+                document.getElementById('contactEmail').value = contact.email || '';
+                document.getElementById('contactPhone').value = contact.phone || '';
+                document.getElementById('contactWhatsApp').value = contact.whatsapp || '';
+                document.getElementById('contactAddress').value = contact.address || '';
+
+                // Brand
+                const brand = configMap['brand'] || { name: 'MEDICAL PRO', suffix_color: '#06a499' };
+                document.getElementById('brandName').value = brand.name || '';
+                document.getElementById('brandSuffixColor').value = brand.suffix_color || '#06a499';
+
+                // Stats
+                const stats = configMap['stats'] || { years: '15+', products: '200+', countries: '80+', clients: '1000+' };
+                document.getElementById('statsYears').textContent = stats.years || '15+';
+                document.getElementById('statsProducts').textContent = stats.products || '200+';
+                document.getElementById('statsCountries').textContent = stats.countries || '80+';
+                document.getElementById('statsClients').textContent = stats.clients || '1000+';
+                document.getElementById('statsYearsInput').value = stats.years || '';
+                document.getElementById('statsProductsInput').value = stats.products || '';
+                document.getElementById('statsCountriesInput').value = stats.countries || '';
+                document.getElementById('statsClientsInput').value = stats.clients || '';
+
+            } catch(e) {
+                console.error('Error loading configs:', e);
+            }
+        }
+
+        function previewBannerImage(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('bannerPreview').src = e.target.result;
+                    document.getElementById('bannerPreview').style.display = 'block';
+                    document.getElementById('bannerPlaceholder').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewAboutImage(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('aboutPreview').src = e.target.result;
+                    document.getElementById('aboutPreview').style.display = 'block';
+                    document.getElementById('aboutPlaceholder').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function saveModuleConfig(moduleName) {
+            const formData = new FormData();
+            formData.append('moduleName', moduleName);
+            
+            // Common fields
+            formData.append('enabled', document.getElementById(moduleName + 'Enabled').checked);
+            formData.append('title', document.getElementById(moduleName + 'Title').value);
+            
+            // Specific fields
+            if (document.getElementById(moduleName + 'Subtitle')) {
+                formData.append('subtitle', document.getElementById(moduleName + 'Subtitle').value);
+            }
+            if (document.getElementById(moduleName + 'Content')) {
+                formData.append('content', document.getElementById(moduleName + 'Content').value);
+            }
+            if (document.getElementById(moduleName + 'Count')) {
+                formData.append('extraData', JSON.stringify({ show_count: parseInt(document.getElementById(moduleName + 'Count').value) }));
+            }
+            
+            // Events specific
+            if (moduleName === 'events') {
+                formData.append('extraData', JSON.stringify({
+                    name: document.getElementById('eventsName').value,
+                    booth: document.getElementById('eventsBooth').value,
+                    start_date: document.getElementById('eventsStartDate').value,
+                    end_date: document.getElementById('eventsEndDate').value,
+                    location: document.getElementById('eventsLocation').value,
+                    description: document.getElementById('eventsDescription').value,
+                    left_icon: document.getElementById('eventsIcon').value,
+                    left_title: document.getElementById('eventsLeftTitle').value,
+                    left_subtitle: document.getElementById('eventsLeftSubtitle').value
+                }));
+            }
+            
+            // Contact specific
+            if (moduleName === 'contact') {
+                formData.append('extraData', JSON.stringify({
+                    email: document.getElementById('contactEmail').value,
+                    phone: document.getElementById('contactPhone').value,
+                    whatsapp: document.getElementById('contactWhatsApp').value,
+                    address: document.getElementById('contactAddress').value
+                }));
+            }
+            
+            // Image
+            const imageInput = document.getElementById(moduleName + 'ImageInput');
+            if (imageInput && imageInput.files.length > 0) {
+                formData.append('image', imageInput.files[0]);
+            }
+            
+            const res = await apiFetch('/api/admin/modules', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (res.ok) {
+                showToast('配置保存成功！');
+                loadAllConfigs();
+            } else {
+                const err = await res.json();
+                showToast('保存失败: ' + (err.error || '未知错误'), 'error');
+            }
+        }
+
+        function saveBrandConfig() {
+            const config = {
+                name: document.getElementById('brandName').value || 'MEDICAL PRO',
+                suffix_color: document.getElementById('brandSuffixColor').value || '#06a499'
+            };
+            savePageConfig('brand', config);
+        }
+
+        function saveStatsConfig() {
+            const config = {
+                years: document.getElementById('statsYearsInput').value || '15+',
+                products: document.getElementById('statsProductsInput').value || '200+',
+                countries: document.getElementById('statsCountriesInput').value || '80+',
+                clients: document.getElementById('statsClientsInput').value || '1000+'
+            };
+            savePageConfig('stats', config);
+        }
+
+        async function savePageConfig(pageName, configData) {
+            const res = await apiFetch('/api/admin/config', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pageName, configData: JSON.stringify(configData) })
+            });
+            
+            if (res.ok) {
+                showToast('配置保存成功！');
+                loadAllConfigs();
+            } else {
+                showToast('保存失败', 'error');
+            }
+        }
+
+        // Products Management
+        async function loadProducts() {
+            const res = await apiFetch('/api/admin/images?category=products');
+            const images = await res.json();
+            images.sort((a, b) => a.sort_order - b.sort_order);
+
+            const list = document.getElementById('productsList');
+            if (images.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:#999;padding:50px;"><div style="font-size:48px;margin-bottom:15px;">📦</div><p>暂无产品数据，请添加产品</p></div>';
+                return;
+            }
+
+            list.innerHTML = images.map(img => `
+                <div class="product-item">
+                    <img src="/uploads/${img.filename}" alt="${img.description}">
+                    <h4>${img.description || '未命名产品'}</h4>
+                    <p>${img.long_description || '暂无描述'}</p>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="editProductItem(${img.id}, '${img.description || ''}', '${img.long_description || ''}', '${img.filename}', ${img.sort_order})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteProductImage(${img.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addProductItem() {
+            document.getElementById('productModalTitle').textContent = '添加产品';
+            document.getElementById('productId').value = '';
+            document.getElementById('productName').value = '';
+            document.getElementById('productDescription').value = '';
+            document.getElementById('productSortOrder').value = '0';
+            document.getElementById('productImagePath').value = '';
+            document.getElementById('productPreview').style.display = 'none';
+            document.getElementById('productPlaceholder').style.display = 'block';
+            document.getElementById('productImageInput').value = '';
+            document.getElementById('productModal').classList.add('active');
+        }
+
+        function editProductItem(id, name, desc, filename, sortOrder) {
+            document.getElementById('productModalTitle').textContent = '编辑产品';
+            document.getElementById('productId').value = id;
+            document.getElementById('productName').value = name;
+            document.getElementById('productDescription').value = desc;
+            document.getElementById('productSortOrder').value = sortOrder;
+            document.getElementById('productImagePath').value = filename;
+            document.getElementById('productPreview').src = '/uploads/' + filename;
+            document.getElementById('productPreview').style.display = 'block';
+            document.getElementById('productPlaceholder').style.display = 'none';
+            document.getElementById('productImageInput').value = '';
+            document.getElementById('productModal').classList.add('active');
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.remove('active');
+        }
+
+        function previewProductImage(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('productPreview').src = e.target.result;
+                    document.getElementById('productPreview').style.display = 'block';
+                    document.getElementById('productPlaceholder').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function saveProductItem() {
+            const id = document.getElementById('productId').value;
+            const formData = new FormData();
+            formData.append('category', 'products');
+            formData.append('description', document.getElementById('productName').value);
+            formData.append('long_description', document.getElementById('productDescription').value);
+            formData.append('sort_order', document.getElementById('productSortOrder').value);
+            
+            const fileInput = document.getElementById('productImageInput');
+            if (fileInput.files.length > 0) {
+                formData.append('image', fileInput.files[0]);
+            } else {
+                formData.append('image_path', document.getElementById('productImagePath').value);
+            }
+
+            const url = id ? `/api/admin/images/${id}` : '/api/admin/images';
+            const method = id ? 'PUT' : 'POST';
+            
+            const res = await apiFetch(url, { method, body: formData });
+            
+            if (res.ok) {
+                closeProductModal();
+                loadProducts();
+                showToast('产品保存成功！');
+            } else {
+                showToast('保存失败', 'error');
+            }
+        }
+
+        async function deleteProductImage(id) {
+            if (!confirm('确定删除此产品？')) return;
+            const res = await apiFetch(`/api/admin/images/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadProducts();
+                showToast('产品删除成功！');
+            }
+        }
+
+        // Content Items Management (Factory/Advantage)
+        async function loadContentItems(section) {
+            const res = await apiFetch(`/api/admin/content?section=${section}`);
+            const items = await res.json();
+            items.sort((a, b) => a.sort_order - b.sort_order);
+
+            const list = document.getElementById(section + 'List');
+            if (items.length === 0) {
+                const icons = { factory: '🏭', advantage: '⭐' };
+                list.innerHTML = `<div style="text-align:center;color:#999;padding:50px;"><div style="font-size:48px;margin-bottom:15px;">${icons[section]}</div><p>暂无数据，请添加项目</p></div>`;
+                return;
+            }
+
+            list.innerHTML = items.map(item => `
+                <div class="content-item">
+                    ${item.image_path ? `<img src="/uploads/${item.image_path}" />` : `<div class="icon">${item.icon || '📄'}</div>`}
+                    <div class="info">
+                        <h4>${item.title}</h4>
+                        <p>${item.description}</p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="editContentItem('${section}', ${item.ID}, '${item.title}', '${item.description.replace(/'/g, "\\'")}', '${item.image_path || ''}', '${item.icon || ''}', ${item.sort_order})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteContentItem(${item.ID})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addFactoryItem() {
+            openContentModal('factory', '添加工厂优势项目');
+        }
+
+        function addAdvantageItem() {
+            openContentModal('advantage', '添加核心优势项目');
+        }
+
+        function openContentModal(section, title) {
+            document.getElementById('contentModalTitle').textContent = title;
+            document.getElementById('contentItemId').value = '';
+            document.getElementById('contentTitle').value = '';
+            document.getElementById('contentDescription').value = '';
+            document.getElementById('contentIcon').value = '';
+            document.getElementById('contentSortOrder').value = '0';
+            document.getElementById('contentImagePath').value = '';
+            document.getElementById('contentSectionType').value = section;
+            document.getElementById('contentPreview').style.display = 'none';
+            document.getElementById('contentPlaceholder').style.display = 'block';
+            document.getElementById('contentImageInput').value = '';
+            document.getElementById('contentModal').classList.add('active');
+        }
+
+        function editContentItem(section, id, title, description, imagePath, icon, sortOrder) {
+            document.getElementById('contentModalTitle').textContent = '编辑项目';
+            document.getElementById('contentItemId').value = id;
+            document.getElementById('contentTitle').value = title;
+            document.getElementById('contentDescription').value = description;
+            document.getElementById('contentIcon').value = icon;
+            document.getElementById('contentSortOrder').value = sortOrder;
+            document.getElementById('contentImagePath').value = imagePath || '';
+            document.getElementById('contentSectionType').value = section;
+            
+            if (imagePath) {
+                document.getElementById('contentPreview').src = '/uploads/' + imagePath;
+                document.getElementById('contentPreview').style.display = 'block';
+                document.getElementById('contentPlaceholder').style.display = 'none';
+            } else {
+                document.getElementById('contentPreview').style.display = 'none';
+                document.getElementById('contentPlaceholder').style.display = 'block';
+            }
+            document.getElementById('contentImageInput').value = '';
+            document.getElementById('contentModal').classList.add('active');
+        }
+
+        function closeContentModal() {
+            document.getElementById('contentModal').classList.remove('active');
+        }
+
+        function previewContentImage(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('contentPreview').src = e.target.result;
+                    document.getElementById('contentPreview').style.display = 'block';
+                    document.getElementById('contentPlaceholder').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function saveContentItem() {
+            const id = document.getElementById('contentItemId').value;
+            const section = document.getElementById('contentSectionType').value;
+            
+            const formData = new FormData();
+            formData.append('section', section);
+            formData.append('title', document.getElementById('contentTitle').value);
+            formData.append('description', document.getElementById('contentDescription').value);
+            formData.append('icon', document.getElementById('contentIcon').value);
+            formData.append('sort_order', document.getElementById('contentSortOrder').value);
+            
+            const fileInput = document.getElementById('contentImageInput');
+            if (fileInput.files.length > 0) {
+                formData.append('image', fileInput.files[0]);
+            } else {
+                formData.append('image_path', document.getElementById('contentImagePath').value);
+            }
+
+            const url = id ? `/api/admin/content/${id}` : '/api/admin/content';
+            const method = id ? 'PUT' : 'POST';
+            
+            const res = await apiFetch(url, { method, body: formData });
+            
+            if (res.ok) {
+                closeContentModal();
+                loadContentItems(section);
+                showToast('项目保存成功！');
+            } else {
+                showToast('保存失败', 'error');
+            }
+        }
+
+        // Language Management
+        async function loadLangTexts() {
+            const module = document.getElementById('langModuleSelect')?.value || '';
+            let url = '/api/admin/lang';
+            if (module) url += '?module=' + encodeURIComponent(module);
+
+            const res = await apiFetch(url);
+            const texts = await res.json();
+
+            const list = document.getElementById('langList');
+            if (texts.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:#999;padding:50px;"><div style="font-size:48px;margin-bottom:15px;">📝</div><p>暂无文案数据，请添加文案</p></div>';
+                return;
+            }
+
+            list.innerHTML = texts.map(text => `
+                <div class="content-item">
+                    <div class="icon" style="font-size:20px;">🌐</div>
+                    <div class="info">
+                        <div style="display:flex;gap:10px;margin-bottom:5px;">
+                            <span style="background:#0a5cad;color:#fff;padding:3px 10px;border-radius:10px;font-size:12px;">${text.module}</span>
+                            <span style="font-family:monospace;color:#666;font-size:13px;">${text.key}</span>
+                        </div>
+                        <div style="display:flex;gap:20px;">
+                            <div>
+                                <p style="font-size:11px;color:#999;">EN</p>
+                                <p style="font-size:13px;">${text.enText || '(empty)'}</p>
+                            </div>
+                            <div>
+                                <p style="font-size:11px;color:#999;">中文</p>
+                                <p style="font-size:13px;">${text.zhText || '(empty)'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="actions">
+                                <button class="btn btn-primary" style="font-size:12px;padding:8px 15px;" onclick="editLangText(${text.id})">编辑</button>
+                                <button class="btn btn-danger" style="font-size:12px;padding:8px 15px;" onclick="deleteLangText(${text.id})">删除</button>
+                            </div>
+                        </div>
+                    `).join('');
+        }
+
+        function addLangText() {
+            document.getElementById('langModalTitle').textContent = '添加文案';
+            document.getElementById('langTextId').value = '';
+            document.getElementById('langKey').value = '';
+            document.getElementById('langModule').value = 'nav';
+            document.getElementById('langEnText').value = '';
+            document.getElementById('langZhText').value = '';
+            document.getElementById('langDescription').value = '';
+            document.getElementById('langModal').classList.add('active');
+        }
+
+        async function editLangText(id) {
+            const res = await apiFetch(`/api/admin/lang/${id}`);
+            const text = await res.json();
+
+            document.getElementById('langModalTitle').textContent = '编辑文案';
+            document.getElementById('langTextId').value = text.id;
+            document.getElementById('langKey').value = text.key;
+            document.getElementById('langKey').disabled = true;
+            document.getElementById('langModule').value = text.module;
+            document.getElementById('langEnText').value = text.enText;
+            document.getElementById('langZhText').value = text.zhText;
+            document.getElementById('langDescription').value = text.description;
+            document.getElementById('langModal').classList.add('active');
+        }
+
+        async function saveLangText() {
+            const id = document.getElementById('langTextId').value;
+            const key = document.getElementById('langKey').value;
+            const module = document.getElementById('langModule').value;
+            const enText = document.getElementById('langEnText').value;
+            const zhText = document.getElementById('langZhText').value;
+            const description = document.getElementById('langDescription').value;
+
+            if (!key) {
+                showToast('请输入唯一标识', 'error');
+                return;
+            }
+
+            const data = { key, module, enText, zhText, description };
+            const url = id ? `/api/admin/lang/${id}` : '/api/admin/lang';
+            const method = id ? 'PUT' : 'POST';
+            const body = id ? JSON.stringify({ enText, zhText, description }) : JSON.stringify(data);
+
+            const res = await apiFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body
+            });
+
+            if (res.ok) {
+                closeLangModal();
+                loadLangTexts();
+                showToast('文案保存成功！');
+            } else {
+                const err = await res.json();
+                showToast('保存失败：' + err.error, 'error');
+            }
+        }
+
+        function closeLangModal() {
+            document.getElementById('langModal').classList.remove('active');
+            document.getElementById('langKey').disabled = false;
+        }
+
+        async function deleteLangText(id) {
+            if (!confirm('确定删除此文案？')) return;
+            const res = await apiFetch(`/api/admin/lang/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadLangTexts();
+                showToast('文案删除成功！');
+            }
+        }
+    </script>
+</body>
+</html>
