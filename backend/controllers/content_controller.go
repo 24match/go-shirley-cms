@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"medical-device-cms/backend/common"
 	"medical-device-cms/backend/services"
 )
 
@@ -23,10 +23,10 @@ func (c *ContentController) GetContentItems(ctx *gin.Context) {
 	section := ctx.Query("section")
 	items, err := c.contentService.GetContentItems(section)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, items)
+	common.JSONSuccess(ctx, items)
 }
 
 func (c *ContentController) CreateContentItem(ctx *gin.Context) {
@@ -34,13 +34,17 @@ func (c *ContentController) CreateContentItem(ctx *gin.Context) {
 	title := ctx.PostForm("title")
 	description := ctx.PostForm("description")
 	sortOrder, _ := strconv.Atoi(ctx.PostForm("sort_order"))
+	zhTitle := ctx.PostForm("zhTitle")
+	enTitle := ctx.PostForm("enTitle")
+	zhDescription := ctx.PostForm("zhDescription")
+	enDescription := ctx.PostForm("enDescription")
 
 	var imagePath string
 	file, err := ctx.FormFile("image")
 	if err == nil {
 		filename := strconv.Itoa(os.Getpid()) + "_" + file.Filename
 		if err := ctx.SaveUploadedFile(file, "./uploads/"+filename); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image"})
+			common.JSONInternalServerError(ctx, "Failed to save image")
 			return
 		}
 		imagePath = filename
@@ -48,12 +52,12 @@ func (c *ContentController) CreateContentItem(ctx *gin.Context) {
 		imagePath = ctx.PostForm("image_path")
 	}
 
-	item, err := c.contentService.CreateContentItem(section, title, description, imagePath, sortOrder, "")
+	item, err := c.contentService.CreateContentItem(section, title, description, imagePath, sortOrder, "", zhTitle, enTitle, zhDescription, enDescription)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, item)
+	common.JSONSuccess(ctx, item)
 }
 
 func (c *ContentController) UpdateContentItem(ctx *gin.Context) {
@@ -69,6 +73,19 @@ func (c *ContentController) UpdateContentItem(ctx *gin.Context) {
 	}
 	if description := ctx.PostForm("description"); description != "" {
 		updates["description"] = description
+	}
+	// 多语言字段
+	if zhTitle := ctx.PostForm("zhTitle"); zhTitle != "" {
+		updates["zhTitle"] = zhTitle
+	}
+	if enTitle := ctx.PostForm("enTitle"); enTitle != "" {
+		updates["enTitle"] = enTitle
+	}
+	if zhDescription := ctx.PostForm("zhDescription"); zhDescription != "" {
+		updates["zhDescription"] = zhDescription
+	}
+	if enDescription := ctx.PostForm("enDescription"); enDescription != "" {
+		updates["enDescription"] = enDescription
 	}
 	if sortOrderStr := ctx.PostForm("sort_order"); sortOrderStr != "" {
 		updates["sort_order"] = sortOrderStr
@@ -89,28 +106,28 @@ func (c *ContentController) UpdateContentItem(ctx *gin.Context) {
 
 	item, err := c.contentService.UpdateContentItem(uint(id), updates)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Item not found"})
+		common.JSONNotFound(ctx, "Item not found")
 		return
 	}
-	ctx.JSON(http.StatusOK, item)
+	common.JSONSuccess(ctx, item)
 }
 
 func (c *ContentController) DeleteContentItem(ctx *gin.Context) {
 	id, _ := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	err := c.contentService.DeleteContentItem(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Item not found"})
+		common.JSONNotFound(ctx, "Item not found")
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "Item deleted successfully"})
+	common.JSONSuccessWithMessage(ctx, nil, "Item deleted successfully")
 }
 
 func (c *ContentController) GetPublicContentItems(ctx *gin.Context) {
 	section := ctx.Query("section")
 	items, err := c.contentService.GetContentItems(section)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, items)
+	common.JSONSuccess(ctx, items)
 }

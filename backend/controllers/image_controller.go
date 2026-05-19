@@ -2,12 +2,12 @@ package controllers
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"medical-device-cms/backend/common"
 	"medical-device-cms/backend/services"
 )
 
@@ -25,16 +25,16 @@ func (c *ImageController) GetImages(ctx *gin.Context) {
 	category := ctx.Query("category")
 	images, err := c.imageService.GetImages(category)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, images)
+	common.JSONSuccess(ctx, images)
 }
 
 func (c *ImageController) UploadImage(ctx *gin.Context) {
 	file, err := ctx.FormFile("image")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
+		common.JSONBadRequest(ctx, "No file uploaded")
 		return
 	}
 
@@ -48,28 +48,28 @@ func (c *ImageController) UploadImage(ctx *gin.Context) {
 	filepathStr := filepath.Join("uploads", filename)
 
 	if err := ctx.SaveUploadedFile(file, filepathStr); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not save file"})
+		common.JSONInternalServerError(ctx, "Could not save file")
 		return
 	}
 
 	image, err := c.imageService.UploadImage(filename, filepathStr, description, category, file.Size, sortOrder)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, image)
+	common.JSONSuccess(ctx, image)
 }
 
 func (c *ImageController) UploadMultipleImages(ctx *gin.Context) {
 	form, err := ctx.MultipartForm()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse multipart form"})
+		common.JSONBadRequest(ctx, "Failed to parse multipart form")
 		return
 	}
 
 	files := form.File["images"]
 	if len(files) == 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No files uploaded"})
+		common.JSONBadRequest(ctx, "No files uploaded")
 		return
 	}
 
@@ -84,7 +84,7 @@ func (c *ImageController) UploadMultipleImages(ctx *gin.Context) {
 		filepathStr := filepath.Join("uploads", filename)
 
 		if err := ctx.SaveUploadedFile(file, filepathStr); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not save file"})
+			common.JSONInternalServerError(ctx, "Could not save file")
 			return
 		}
 
@@ -100,20 +100,20 @@ func (c *ImageController) UploadMultipleImages(ctx *gin.Context) {
 
 	images, err := c.imageService.UploadMultipleImages(uploadedImages)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, images)
+	common.JSONSuccess(ctx, images)
 }
 
 func (c *ImageController) DeleteImage(ctx *gin.Context) {
 	id, _ := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	err := c.imageService.DeleteImage(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
+		common.JSONNotFound(ctx, "Image not found")
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "Image deleted successfully"})
+	common.JSONSuccessWithMessage(ctx, nil, "Image deleted successfully")
 }
 
 func (c *ImageController) UpdateImage(ctx *gin.Context) {
@@ -153,8 +153,8 @@ func (c *ImageController) UpdateImage(ctx *gin.Context) {
 
 	image, err := c.imageService.UpdateImage(uint(id), updates)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
+		common.JSONNotFound(ctx, "Image not found")
 		return
 	}
-	ctx.JSON(http.StatusOK, image)
+	common.JSONSuccess(ctx, image)
 }

@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"net/http"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"medical-device-cms/backend/common"
 	"medical-device-cms/backend/config"
 	"medical-device-cms/backend/models"
 )
@@ -12,12 +13,15 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
+
 		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			log.Printf("AuthMiddleware: No Authorization header for %s", c.Request.URL)
+			common.JSONUnauthorized(c, "Unauthorized")
 			c.Abort()
 			return
 		}
 
+		// 处理 Bearer 前缀
 		if len(tokenString) > 7 && tokenString[:7] == "Bearer " {
 			tokenString = tokenString[7:]
 		}
@@ -28,7 +32,8 @@ func AuthMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			log.Printf("AuthMiddleware: Invalid token for %s - %v", c.Request.URL, err)
+			common.JSONUnauthorized(c, "Invalid token")
 			c.Abort()
 			return
 		}

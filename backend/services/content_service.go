@@ -24,14 +24,18 @@ func (s *ContentService) GetContentItems(section string) ([]models.ContentItem, 
 	return items, err
 }
 
-func (s *ContentService) CreateContentItem(section, title, description, imagePath string, sortOrder int, icon string) (*models.ContentItem, error) {
+func (s *ContentService) CreateContentItem(section, title, description, imagePath string, sortOrder int, icon string, zhTitle, enTitle, zhDescription, enDescription string) (*models.ContentItem, error) {
 	item := models.ContentItem{
-		Section:     section,
-		Title:       title,
-		Description: description,
-		ImagePath:   imagePath,
-		SortOrder:   sortOrder,
-		Icon:        icon,
+		Section:       section,
+		Title:         title,
+		Description:   description,
+		ImagePath:     imagePath,
+		SortOrder:     sortOrder,
+		Icon:          icon,
+		ZhTitle:       zhTitle,
+		EnTitle:       enTitle,
+		ZhDescription: zhDescription,
+		EnDescription: enDescription,
 	}
 	err := config.DB.Create(&item).Error
 	return &item, err
@@ -51,6 +55,19 @@ func (s *ContentService) UpdateContentItem(id uint, updates map[string]interface
 	}
 	if description, ok := updates["description"].(string); ok && description != "" {
 		item.Description = description
+	}
+	// 多语言字段
+	if zhTitle, ok := updates["zhTitle"].(string); ok {
+		item.ZhTitle = zhTitle
+	}
+	if enTitle, ok := updates["enTitle"].(string); ok {
+		item.EnTitle = enTitle
+	}
+	if zhDescription, ok := updates["zhDescription"].(string); ok {
+		item.ZhDescription = zhDescription
+	}
+	if enDescription, ok := updates["enDescription"].(string); ok {
+		item.EnDescription = enDescription
 	}
 	if sortOrderStr, ok := updates["sort_order"].(string); ok && sortOrderStr != "" {
 		sortOrder, _ := strconv.Atoi(sortOrderStr)

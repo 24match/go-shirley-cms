@@ -12,8 +12,16 @@ func NewLanguageService() *LanguageService {
 }
 
 func (s *LanguageService) GetPublicLanguageTexts() (map[string]map[string]string, error) {
+	return s.GetPublicLanguageTextsByModule("")
+}
+
+func (s *LanguageService) GetPublicLanguageTextsByModule(module string) (map[string]map[string]string, error) {
 	var texts []models.LanguageText
-	if err := config.DB.Find(&texts).Error; err != nil {
+	query := config.DB
+	if module != "" {
+		query = query.Where("module = ?", module)
+	}
+	if err := query.Find(&texts).Error; err != nil {
 		return nil, err
 	}
 

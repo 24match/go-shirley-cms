@@ -117,6 +117,18 @@
         .toast.show { display: block; animation: slideIn 0.3s ease; }
         @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .toast.error { background: #dc3545; }
+        
+        /* Bilingual Input Styles */
+        .bilingual-group { margin-bottom: 20px; }
+        .bilingual-group label { display: block; margin-bottom: 10px; font-weight: 600; color: #333; font-size: 14px; }
+        .bilingual-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .lang-input { background: #f9fafb; border-radius: 10px; padding: 15px; border: 1px solid #e5e7eb; }
+        .lang-input .lang-label { font-size: 12px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .lang-input .lang-label.cn { color: #0a5cad; }
+        .lang-input .lang-label.en { color: #6b7280; }
+        .lang-input input, .lang-input textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background: white; }
+        .lang-input input:focus, .lang-input textarea:focus { outline: none; border-color: #0a5cad; box-shadow: 0 0 0 2px rgba(10,92,173,0.1); }
+        .lang-input textarea { resize: vertical; min-height: 80px; }
     </style>
 </head>
 <body>
@@ -227,20 +239,46 @@
                             <input type="file" id="bannerImageInput" accept="image/*" onchange="previewBannerImage(this)">
                         </div>
                         
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>主标题</label>
-                                <input type="text" id="bannerTitle" placeholder="输入Banner主标题">
-                            </div>
-                            <div class="form-group">
-                                <label>副标题</label>
-                                <input type="text" id="bannerSubtitle" placeholder="输入Banner副标题">
+                        <div class="bilingual-group">
+                            <label>主标题</label>
+                            <div class="bilingual-inputs">
+                                <div class="lang-input">
+                                    <span class="lang-label cn">🇨🇳 中文</span>
+                                    <input type="text" id="bannerZhTitle" placeholder="输入Banner主标题（中文）">
+                                </div>
+                                <div class="lang-input">
+                                    <span class="lang-label en">🇬🇧 英文</span>
+                                    <input type="text" id="bannerEnTitle" placeholder="输入Banner主标题（英文）">
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="bilingual-group">
+                            <label>副标题</label>
+                            <div class="bilingual-inputs">
+                                <div class="lang-input">
+                                    <span class="lang-label cn">🇨🇳 中文</span>
+                                    <input type="text" id="bannerZhSubtitle" placeholder="输入Banner副标题（中文）">
+                                </div>
+                                <div class="lang-input">
+                                    <span class="lang-label en">🇬🇧 英文</span>
+                                    <input type="text" id="bannerEnSubtitle" placeholder="输入Banner副标题（英文）">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bilingual-group">
                             <label>描述文字</label>
-                            <textarea id="bannerContent" rows="4" placeholder="输入Banner描述内容"></textarea>
+                            <div class="bilingual-inputs">
+                                <div class="lang-input">
+                                    <span class="lang-label cn">🇨🇳 中文</span>
+                                    <textarea id="bannerZhContent" rows="4" placeholder="输入Banner描述内容（中文）"></textarea>
+                                </div>
+                                <div class="lang-input">
+                                    <span class="lang-label en">🇬🇧 英文</span>
+                                    <textarea id="bannerEnContent" rows="4" placeholder="输入Banner描述内容（英文）"></textarea>
+                                </div>
+                            </div>
                         </div>
                         
                         <button class="btn btn-primary" onclick="saveModuleConfig('banner')">保存配置</button>
@@ -270,25 +308,60 @@
                             <input type="file" id="aboutImageInput" accept="image/*" onchange="previewAboutImage(this)">
                         </div>
                         
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>主标题</label>
-                                <input type="text" id="aboutTitle" placeholder="输入关于我们主标题">
-                            </div>
-                            <div class="form-group">
-                                <label>副标题</label>
-                                <input type="text" id="aboutSubtitle" placeholder="输入关于我们副标题">
+                        <div class="bilingual-group">
+                            <label>主标题</label>
+                            <div class="bilingual-inputs">
+                                <div class="lang-input">
+                                    <span class="lang-label cn">🇨🇳 中文</span>
+                                    <input type="text" id="aboutZhTitle" placeholder="输入关于我们主标题（中文）">
+                                </div>
+                                <div class="lang-input">
+                                    <span class="lang-label en">🇬🇧 英文</span>
+                                    <input type="text" id="aboutEnTitle" placeholder="输入关于我们主标题（英文）">
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="bilingual-group">
+                            <label>副标题</label>
+                            <div class="bilingual-inputs">
+                                <div class="lang-input">
+                                    <span class="lang-label cn">🇨🇳 中文</span>
+                                    <input type="text" id="aboutZhSubtitle" placeholder="输入关于我们副标题（中文）">
+                                </div>
+                                <div class="lang-input">
+                                    <span class="lang-label en">🇬🇧 英文</span>
+                                    <input type="text" id="aboutEnSubtitle" placeholder="输入关于我们副标题（英文）">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bilingual-group">
                             <label>左侧标题</label>
-                            <input type="text" id="aboutLeftTitle" placeholder="输入左侧区域标题">
+                            <div class="bilingual-inputs">
+                                <div class="lang-input">
+                                    <span class="lang-label cn">🇨🇳 中文</span>
+                                    <input type="text" id="aboutZhLeftTitle" placeholder="输入左侧区域标题（中文）">
+                                </div>
+                                <div class="lang-input">
+                                    <span class="lang-label en">🇬🇧 英文</span>
+                                    <input type="text" id="aboutEnLeftTitle" placeholder="输入左侧区域标题（英文）">
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="bilingual-group">
                             <label>详细内容（支持多段落，用空行分隔）</label>
-                            <textarea id="aboutContent" rows="8" placeholder="在此输入关于我们的详细介绍...&#10;&#10;支持多个段落，段落之间用空行分隔"></textarea>
+                            <div class="bilingual-inputs">
+                                <div class="lang-input">
+                                    <span class="lang-label cn">🇨🇳 中文</span>
+                                    <textarea id="aboutZhContent" rows="6" placeholder="在此输入关于我们的详细介绍（中文）..."></textarea>
+                                </div>
+                                <div class="lang-input">
+                                    <span class="lang-label en">🇬🇧 英文</span>
+                                    <textarea id="aboutEnContent" rows="6" placeholder="在此输入关于我们的详细介绍（英文）..."></textarea>
+                                </div>
+                            </div>
                         </div>
                         
                         <button class="btn btn-primary" onclick="saveModuleConfig('about')">保存配置</button>
@@ -435,11 +508,21 @@
                             </div>
                         </div>
                         
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>展会名称</label>
-                                <input type="text" id="eventsName" placeholder="输入展会名称">
+                        <div class="bilingual-group">
+                            <label>展会名称</label>
+                            <div class="bilingual-inputs">
+                                <div class="lang-input">
+                                    <span class="lang-label cn">🇨🇳 中文</span>
+                                    <input type="text" id="eventsZhName" placeholder="输入展会名称（中文）">
+                                </div>
+                                <div class="lang-input">
+                                    <span class="lang-label en">🇬🇧 英文</span>
+                                    <input type="text" id="eventsEnName" placeholder="输入展会名称（英文）">
+                                </div>
                             </div>
+                        </div>
+                        
+                        <div class="form-row">
                             <div class="form-group">
                                 <label>展位号</label>
                                 <input type="text" id="eventsBooth" placeholder="输入展位号">
@@ -457,14 +540,32 @@
                             </div>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="bilingual-group">
                             <label>展会地点</label>
-                            <input type="text" id="eventsLocation" placeholder="输入展会地点">
+                            <div class="bilingual-inputs">
+                                <div class="lang-input">
+                                    <span class="lang-label cn">🇨🇳 中文</span>
+                                    <input type="text" id="eventsZhLocation" placeholder="输入展会地点（中文）">
+                                </div>
+                                <div class="lang-input">
+                                    <span class="lang-label en">🇬🇧 英文</span>
+                                    <input type="text" id="eventsEnLocation" placeholder="输入展会地点（英文）">
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="bilingual-group">
                             <label>展会描述</label>
-                            <textarea id="eventsDescription" rows="4" placeholder="输入展会描述"></textarea>
+                            <div class="bilingual-inputs">
+                                <div class="lang-input">
+                                    <span class="lang-label cn">🇨🇳 中文</span>
+                                    <textarea id="eventsZhDescription" rows="4" placeholder="输入展会描述（中文）"></textarea>
+                                </div>
+                                <div class="lang-input">
+                                    <span class="lang-label en">🇬🇧 英文</span>
+                                    <textarea id="eventsEnDescription" rows="4" placeholder="输入展会描述（英文）"></textarea>
+                                </div>
+                            </div>
                         </div>
                         
                         <div style="background:#f0f7ff;padding:20px;border-radius:10px;margin-bottom:20px;">
@@ -474,14 +575,32 @@
                                     <label>图标（Emoji）</label>
                                     <input type="text" id="eventsIcon" placeholder="例如：🏥">
                                 </div>
-                                <div class="form-group">
-                                    <label>左侧标题</label>
-                                    <input type="text" id="eventsLeftTitle" placeholder="输入左侧区域标题">
+                            </div>
+                            <div class="bilingual-group">
+                                <label>左侧标题</label>
+                                <div class="bilingual-inputs">
+                                    <div class="lang-input">
+                                        <span class="lang-label cn">🇨🇳 中文</span>
+                                        <input type="text" id="eventsZhLeftTitle" placeholder="输入左侧区域标题（中文）">
+                                    </div>
+                                    <div class="lang-input">
+                                        <span class="lang-label en">🇬🇧 英文</span>
+                                        <input type="text" id="eventsEnLeftTitle" placeholder="输入左侧区域标题（英文）">
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-group">
+                            <div class="bilingual-group">
                                 <label>左侧副标题</label>
-                                <input type="text" id="eventsLeftSubtitle" placeholder="输入左侧区域副标题">
+                                <div class="bilingual-inputs">
+                                    <div class="lang-input">
+                                        <span class="lang-label cn">🇨🇳 中文</span>
+                                        <input type="text" id="eventsZhLeftSubtitle" placeholder="输入左侧区域副标题（中文）">
+                                    </div>
+                                    <div class="lang-input">
+                                        <span class="lang-label en">🇬🇧 英文</span>
+                                        <input type="text" id="eventsEnLeftSubtitle" placeholder="输入左侧区域副标题（英文）">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -688,14 +807,32 @@
                 <input type="file" id="contentImageInput" accept="image/*" onchange="previewContentImage(this)">
             </div>
             
-            <div class="form-group">
+            <div class="bilingual-group">
                 <label>标题</label>
-                <input type="text" id="contentTitle" placeholder="输入标题">
+                <div class="bilingual-inputs">
+                    <div class="lang-input">
+                        <span class="lang-label cn">🇨🇳 中文</span>
+                        <input type="text" id="contentZhTitle" placeholder="输入标题（中文）">
+                    </div>
+                    <div class="lang-input">
+                        <span class="lang-label en">🇬🇧 英文</span>
+                        <input type="text" id="contentEnTitle" placeholder="输入标题（英文）">
+                    </div>
+                </div>
             </div>
             
-            <div class="form-group">
+            <div class="bilingual-group">
                 <label>描述</label>
-                <textarea id="contentDescription" rows="3" placeholder="输入描述"></textarea>
+                <div class="bilingual-inputs">
+                    <div class="lang-input">
+                        <span class="lang-label cn">🇨🇳 中文</span>
+                        <textarea id="contentZhDescription" rows="3" placeholder="输入描述（中文）"></textarea>
+                    </div>
+                    <div class="lang-input">
+                        <span class="lang-label en">🇬🇧 英文</span>
+                        <textarea id="contentEnDescription" rows="3" placeholder="输入描述（英文）"></textarea>
+                    </div>
+                </div>
             </div>
             
             <div class="form-group">
@@ -770,6 +907,12 @@
         let token = localStorage.getItem('token');
 
         async function apiFetch(url, options = {}) {
+            // 如果没有 token，不要发送请求
+            if (!token) {
+                handleAuthError();
+                throw new Error('No token');
+            }
+
             const res = await fetch(url, {
                 ...options,
                 headers: {
@@ -803,10 +946,15 @@
         }
 
         function checkAuth() {
-            if (token) {
+            // 确保 token 是有效的字符串
+            if (token && typeof token === 'string' && token.trim() !== '') {
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('adminPage').style.display = 'flex';
                 loadAllConfigs();
+            } else {
+                // 确保显示登录页
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('adminPage').style.display = 'none';
             }
         }
         checkAuth();
@@ -821,13 +969,22 @@
                 body: JSON.stringify({ username, password })
             });
             
-            const data = await res.json();
+            const responseData = await res.json();
+            console.log('Full login response:', responseData);
+            
             if (res.ok) {
-                token = data.token;
-                localStorage.setItem('token', token);
-                checkAuth();
+                // 后端返回格式是 {code, message, data: {token, user}, timestamp}
+                token = responseData.data?.token;
+                console.log('Extracted token:', token);
+                
+                if (token) {
+                    localStorage.setItem('token', token);
+                    checkAuth();
+                } else {
+                    showToast('登录失败: 未获取到 token', 'error');
+                }
             } else {
-                showToast('登录失败: ' + data.error, 'error');
+                showToast('登录失败: ' + (responseData.message || '未知错误'), 'error');
             }
         }
 
@@ -871,8 +1028,13 @@
                     apiFetch('/api/admin/config')
                 ]);
                 
-                const modules = await modulesRes.json();
-                const configs = await configRes.json();
+                const modulesResponse = await modulesRes.json();
+                const configsResponse = await configRes.json();
+                console.log('modulesResponse:', modulesResponse);
+                console.log('configsResponse:', configsResponse);
+                
+                const modules = modulesResponse.data || [];
+                const configs = configsResponse.data || [];
                 
                 const moduleMap = {};
                 modules.forEach(m => { moduleMap[m.moduleName] = m; });
@@ -889,9 +1051,12 @@
                 // Banner
                 const banner = moduleMap['banner'] || configMap['banner'] || {};
                 document.getElementById('bannerEnabled').checked = banner.enabled !== false;
-                document.getElementById('bannerTitle').value = banner.title || '';
-                document.getElementById('bannerSubtitle').value = banner.subtitle || '';
-                document.getElementById('bannerContent').value = banner.content || '';
+                document.getElementById('bannerZhTitle').value = banner.zhTitle || banner.title || '';
+                document.getElementById('bannerEnTitle').value = banner.enTitle || '';
+                document.getElementById('bannerZhSubtitle').value = banner.zhSubtitle || banner.subtitle || '';
+                document.getElementById('bannerEnSubtitle').value = banner.enSubtitle || '';
+                document.getElementById('bannerZhContent').value = banner.zhContent || banner.content || '';
+                document.getElementById('bannerEnContent').value = banner.enContent || '';
                 if (banner.imagePath) {
                     document.getElementById('bannerPreview').src = '/uploads/' + banner.imagePath;
                     document.getElementById('bannerPreview').style.display = 'block';
@@ -901,10 +1066,14 @@
                 // About
                 const about = moduleMap['about'] || configMap['about'] || {};
                 document.getElementById('aboutEnabled').checked = about.enabled !== false;
-                document.getElementById('aboutTitle').value = about.title || '';
-                document.getElementById('aboutSubtitle').value = about.subtitle || '';
-                document.getElementById('aboutLeftTitle').value = about.left_title || '';
-                document.getElementById('aboutContent').value = about.content || '';
+                document.getElementById('aboutZhTitle').value = about.zhTitle || about.title || '';
+                document.getElementById('aboutEnTitle').value = about.enTitle || '';
+                document.getElementById('aboutZhSubtitle').value = about.zhSubtitle || about.subtitle || '';
+                document.getElementById('aboutEnSubtitle').value = about.enSubtitle || '';
+                document.getElementById('aboutZhLeftTitle').value = about.zh_left_title || about.left_title || '';
+                document.getElementById('aboutEnLeftTitle').value = about.en_left_title || '';
+                document.getElementById('aboutZhContent').value = about.zhContent || about.content || '';
+                document.getElementById('aboutEnContent').value = about.enContent || '';
                 if (about.imagePath) {
                     document.getElementById('aboutPreview').src = '/uploads/' + about.imagePath;
                     document.getElementById('aboutPreview').style.display = 'block';
@@ -932,15 +1101,20 @@
                 // Events
                 const events = moduleMap['events'] || configMap['event'] || {};
                 document.getElementById('eventsEnabled').checked = events.enabled !== false;
-                document.getElementById('eventsName').value = events.name || '';
+                document.getElementById('eventsZhName').value = events.zhName || events.name || '';
+                document.getElementById('eventsEnName').value = events.enName || '';
                 document.getElementById('eventsBooth').value = events.booth || '';
                 document.getElementById('eventsStartDate').value = events.start_date || '';
                 document.getElementById('eventsEndDate').value = events.end_date || '';
-                document.getElementById('eventsLocation').value = events.location || '';
-                document.getElementById('eventsDescription').value = events.description || '';
+                document.getElementById('eventsZhLocation').value = events.zhLocation || events.location || '';
+                document.getElementById('eventsEnLocation').value = events.enLocation || '';
+                document.getElementById('eventsZhDescription').value = events.zhDescription || events.description || '';
+                document.getElementById('eventsEnDescription').value = events.enDescription || '';
                 document.getElementById('eventsIcon').value = events.left_icon || '🏥';
-                document.getElementById('eventsLeftTitle').value = events.left_title || '';
-                document.getElementById('eventsLeftSubtitle').value = events.left_subtitle || '';
+                document.getElementById('eventsZhLeftTitle').value = events.zhLeftTitle || events.left_title || '';
+                document.getElementById('eventsEnLeftTitle').value = events.enLeftTitle || '';
+                document.getElementById('eventsZhLeftSubtitle').value = events.zhLeftSubtitle || events.left_subtitle || '';
+                document.getElementById('eventsEnLeftSubtitle').value = events.enLeftSubtitle || '';
 
                 // Contact
                 const contact = moduleMap['contact'] || configMap['contact'] || {};
@@ -1003,9 +1177,31 @@
             
             // Common fields
             formData.append('enabled', document.getElementById(moduleName + 'Enabled').checked);
-            formData.append('title', document.getElementById(moduleName + 'Title').value);
             
-            // Specific fields
+            // Bilingual fields
+            if (document.getElementById(moduleName + 'ZhTitle')) {
+                formData.append('zhTitle', document.getElementById(moduleName + 'ZhTitle').value);
+            }
+            if (document.getElementById(moduleName + 'EnTitle')) {
+                formData.append('enTitle', document.getElementById(moduleName + 'EnTitle').value);
+            }
+            if (document.getElementById(moduleName + 'ZhSubtitle')) {
+                formData.append('zhSubtitle', document.getElementById(moduleName + 'ZhSubtitle').value);
+            }
+            if (document.getElementById(moduleName + 'EnSubtitle')) {
+                formData.append('enSubtitle', document.getElementById(moduleName + 'EnSubtitle').value);
+            }
+            if (document.getElementById(moduleName + 'ZhContent')) {
+                formData.append('zhContent', document.getElementById(moduleName + 'ZhContent').value);
+            }
+            if (document.getElementById(moduleName + 'EnContent')) {
+                formData.append('enContent', document.getElementById(moduleName + 'EnContent').value);
+            }
+            
+            // Fallback for backward compatibility
+            if (document.getElementById(moduleName + 'Title')) {
+                formData.append('title', document.getElementById(moduleName + 'Title').value);
+            }
             if (document.getElementById(moduleName + 'Subtitle')) {
                 formData.append('subtitle', document.getElementById(moduleName + 'Subtitle').value);
             }
@@ -1019,15 +1215,35 @@
             // Events specific
             if (moduleName === 'events') {
                 formData.append('extraData', JSON.stringify({
-                    name: document.getElementById('eventsName').value,
+                    zhName: document.getElementById('eventsZhName').value,
+                    enName: document.getElementById('eventsEnName').value,
+                    zhLocation: document.getElementById('eventsZhLocation').value,
+                    enLocation: document.getElementById('eventsEnLocation').value,
+                    zhDescription: document.getElementById('eventsZhDescription').value,
+                    enDescription: document.getElementById('eventsEnDescription').value,
+                    zhLeftTitle: document.getElementById('eventsZhLeftTitle').value,
+                    enLeftTitle: document.getElementById('eventsEnLeftTitle').value,
+                    zhLeftSubtitle: document.getElementById('eventsZhLeftSubtitle').value,
+                    enLeftSubtitle: document.getElementById('eventsEnLeftSubtitle').value,
                     booth: document.getElementById('eventsBooth').value,
                     start_date: document.getElementById('eventsStartDate').value,
                     end_date: document.getElementById('eventsEndDate').value,
-                    location: document.getElementById('eventsLocation').value,
-                    description: document.getElementById('eventsDescription').value,
                     left_icon: document.getElementById('eventsIcon').value,
-                    left_title: document.getElementById('eventsLeftTitle').value,
-                    left_subtitle: document.getElementById('eventsLeftSubtitle').value
+                    // Backward compatibility
+                    name: document.getElementById('eventsZhName').value,
+                    location: document.getElementById('eventsZhLocation').value,
+                    description: document.getElementById('eventsZhDescription').value,
+                    left_title: document.getElementById('eventsZhLeftTitle').value,
+                    left_subtitle: document.getElementById('eventsZhLeftSubtitle').value
+                }));
+            }
+            // About specific
+            if (moduleName === 'about') {
+                formData.append('extraData', JSON.stringify({
+                    zh_left_title: document.getElementById('aboutZhLeftTitle').value,
+                    en_left_title: document.getElementById('aboutEnLeftTitle').value,
+                    // Backward compatibility
+                    left_title: document.getElementById('aboutZhLeftTitle').value
                 }));
             }
             
@@ -1097,7 +1313,8 @@
         // Products Management
         async function loadProducts() {
             const res = await apiFetch('/api/admin/images?category=products');
-            const images = await res.json();
+            const response = await res.json();
+            const images = response.data || [];
             images.sort((a, b) => a.sort_order - b.sort_order);
 
             const list = document.getElementById('productsList');
@@ -1204,7 +1421,8 @@
         // Content Items Management (Factory/Advantage)
         async function loadContentItems(section) {
             const res = await apiFetch(`/api/admin/content?section=${section}`);
-            const items = await res.json();
+            const response = await res.json();
+            const items = response.data || [];
             items.sort((a, b) => a.sort_order - b.sort_order);
 
             const list = document.getElementById(section + 'List');
@@ -1218,11 +1436,12 @@
                 <div class="content-item">
                     ${item.image_path ? `<img src="/uploads/${item.image_path}" />` : `<div class="icon">${item.icon || '📄'}</div>`}
                     <div class="info">
-                        <h4>${item.title}</h4>
-                        <p>${item.description}</p>
+                        <h4>${item.zhTitle || item.title}</h4>
+                        <p>${item.zhDescription || item.description}</p>
+                        ${item.enTitle ? `<p style="font-size:12px;color:#666;margin-top:5px;">EN: ${item.enTitle}</p>` : ''}
                     </div>
                     <div class="actions">
-                        <button class="btn btn-primary" onclick="editContentItem('${section}', ${item.ID}, '${item.title}', '${item.description.replace(/'/g, "\\'")}', '${item.image_path || ''}', '${item.icon || ''}', ${item.sort_order})">编辑</button>
+                        <button class="btn btn-primary" onclick="editContentItem('${section}', ${item.ID}, '${(item.zhTitle || item.title).replace(/'/g, "\\'")}', '${(item.zhDescription || item.description).replace(/'/g, "\\'")}', '${item.image_path || ''}', '${item.icon || ''}', ${item.sort_order}, '${(item.enTitle || '').replace(/'/g, "\\'")}', '${(item.enDescription || '').replace(/'/g, "\\'")}')">编辑</button>
                         <button class="btn btn-danger" onclick="deleteContentItem(${item.ID})">删除</button>
                     </div>
                 </div>
@@ -1240,8 +1459,10 @@
         function openContentModal(section, title) {
             document.getElementById('contentModalTitle').textContent = title;
             document.getElementById('contentItemId').value = '';
-            document.getElementById('contentTitle').value = '';
-            document.getElementById('contentDescription').value = '';
+            document.getElementById('contentZhTitle').value = '';
+            document.getElementById('contentEnTitle').value = '';
+            document.getElementById('contentZhDescription').value = '';
+            document.getElementById('contentEnDescription').value = '';
             document.getElementById('contentIcon').value = '';
             document.getElementById('contentSortOrder').value = '0';
             document.getElementById('contentImagePath').value = '';
@@ -1252,11 +1473,13 @@
             document.getElementById('contentModal').classList.add('active');
         }
 
-        function editContentItem(section, id, title, description, imagePath, icon, sortOrder) {
+        function editContentItem(section, id, zhTitle, zhDescription, imagePath, icon, sortOrder, enTitle, enDescription) {
             document.getElementById('contentModalTitle').textContent = '编辑项目';
             document.getElementById('contentItemId').value = id;
-            document.getElementById('contentTitle').value = title;
-            document.getElementById('contentDescription').value = description;
+            document.getElementById('contentZhTitle').value = zhTitle;
+            document.getElementById('contentEnTitle').value = enTitle || '';
+            document.getElementById('contentZhDescription').value = zhDescription;
+            document.getElementById('contentEnDescription').value = enDescription || '';
             document.getElementById('contentIcon').value = icon;
             document.getElementById('contentSortOrder').value = sortOrder;
             document.getElementById('contentImagePath').value = imagePath || '';
@@ -1297,8 +1520,12 @@
             
             const formData = new FormData();
             formData.append('section', section);
-            formData.append('title', document.getElementById('contentTitle').value);
-            formData.append('description', document.getElementById('contentDescription').value);
+            formData.append('title', document.getElementById('contentZhTitle').value);
+            formData.append('zhTitle', document.getElementById('contentZhTitle').value);
+            formData.append('enTitle', document.getElementById('contentEnTitle').value);
+            formData.append('description', document.getElementById('contentZhDescription').value);
+            formData.append('zhDescription', document.getElementById('contentZhDescription').value);
+            formData.append('enDescription', document.getElementById('contentEnDescription').value);
             formData.append('icon', document.getElementById('contentIcon').value);
             formData.append('sort_order', document.getElementById('contentSortOrder').value);
             
@@ -1330,7 +1557,8 @@
             if (module) url += '?module=' + encodeURIComponent(module);
 
             const res = await apiFetch(url);
-            const texts = await res.json();
+            const response = await res.json();
+            const texts = response.data || [];
 
             const list = document.getElementById('langList');
             if (texts.length === 0) {
@@ -1378,7 +1606,8 @@
 
         async function editLangText(id) {
             const res = await apiFetch(`/api/admin/lang/${id}`);
-            const text = await res.json();
+            const response = await res.json();
+            const text = response.data;
 
             document.getElementById('langModalTitle').textContent = '编辑文案';
             document.getElementById('langTextId').value = text.id;

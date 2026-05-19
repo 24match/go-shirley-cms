@@ -8,6 +8,7 @@ import (
 
 func RegisterRoutes(r *gin.Engine) {
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.ErrorHandler())
 
 	r.Static("/uploads", "./uploads")
 	r.Static("/frontend", "./frontend")

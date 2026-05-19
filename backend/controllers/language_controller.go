@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"medical-device-cms/backend/common"
 	"medical-device-cms/backend/services"
 )
 
@@ -19,32 +19,33 @@ func NewLanguageController() *LanguageController {
 }
 
 func (c *LanguageController) GetPublicLanguageTexts(ctx *gin.Context) {
-	texts, err := c.languageService.GetPublicLanguageTexts()
+	module := ctx.Query("module")
+	texts, err := c.languageService.GetPublicLanguageTextsByModule(module)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, texts)
+	common.JSONSuccess(ctx, texts)
 }
 
 func (c *LanguageController) GetLanguageTexts(ctx *gin.Context) {
 	module := ctx.Query("module")
 	texts, err := c.languageService.GetLanguageTexts(module)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, texts)
+	common.JSONSuccess(ctx, texts)
 }
 
 func (c *LanguageController) GetLanguageText(ctx *gin.Context) {
 	id, _ := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	text, err := c.languageService.GetLanguageText(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Language text not found"})
+		common.JSONNotFound(ctx, "Language text not found")
 		return
 	}
-	ctx.JSON(http.StatusOK, text)
+	common.JSONSuccess(ctx, text)
 }
 
 func (c *LanguageController) CreateLanguageText(ctx *gin.Context) {
@@ -57,16 +58,16 @@ func (c *LanguageController) CreateLanguageText(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		common.JSONBadRequest(ctx, "Invalid request parameters")
 		return
 	}
 
 	text, err := c.languageService.CreateLanguageText(req.Key, req.Module, req.EnText, req.ZhText, req.Description)
 	if err != nil {
-		ctx.JSON(http.StatusConflict, gin.H{"error": "Key already exists"})
+		common.JSONError(ctx, 409, common.ErrConflict, "Key already exists")
 		return
 	}
-	ctx.JSON(http.StatusCreated, text)
+	common.JSONSuccess(ctx, text)
 }
 
 func (c *LanguageController) UpdateLanguageText(ctx *gin.Context) {
@@ -79,36 +80,36 @@ func (c *LanguageController) UpdateLanguageText(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		common.JSONBadRequest(ctx, "Invalid request parameters")
 		return
 	}
 
 	text, err := c.languageService.UpdateLanguageText(uint(id), req.EnText, req.ZhText, req.Description)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Language text not found"})
+		common.JSONNotFound(ctx, "Language text not found")
 		return
 	}
-	ctx.JSON(http.StatusOK, text)
+	common.JSONSuccess(ctx, text)
 }
 
 func (c *LanguageController) DeleteLanguageText(ctx *gin.Context) {
 	id, _ := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	err := c.languageService.DeleteLanguageText(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Language text not found"})
+		common.JSONNotFound(ctx, "Language text not found")
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "Language text deleted successfully"})
+	common.JSONSuccessWithMessage(ctx, nil, "Language text deleted successfully")
 }
 
 func (c *LanguageController) GetLanguageTextVersions(ctx *gin.Context) {
 	id, _ := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	versions, err := c.languageService.GetLanguageTextVersions(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, versions)
+	common.JSONSuccess(ctx, versions)
 }
 
 func (c *LanguageController) RestoreLanguageTextVersion(ctx *gin.Context) {
@@ -117,8 +118,8 @@ func (c *LanguageController) RestoreLanguageTextVersion(ctx *gin.Context) {
 
 	text, err := c.languageService.RestoreLanguageTextVersion(uint(id), uint(version))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Version not found"})
+		common.JSONNotFound(ctx, "Version not found")
 		return
 	}
-	ctx.JSON(http.StatusOK, text)
+	common.JSONSuccess(ctx, text)
 }

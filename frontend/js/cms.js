@@ -1,4 +1,16 @@
-document.addEventListener('DOMContentLoaded', loadCMSData);
+let cmsData = { config: {}, modules: {}, images: [], contentItems: [] };
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadCMSData();
+    applyCMSContent();
+    
+    // 当语言切换时，重新应用内容
+    const originalSetLang = window.setLang;
+    window.setLang = function(lang) {
+        originalSetLang(lang);
+        applyCMSContent();
+    };
+});
 
 async function loadCMSData() {
     try {
@@ -8,29 +20,47 @@ async function loadCMSData() {
             fetch('/api/public/images'),
             fetch('/api/public/content')
         ]);
-        const config = await configRes.json();
-        const modules = await modulesRes.json();
-        const images = await imagesRes.json();
-        const contentItems = await contentRes.json();
+        const configData = await configRes.json();
+        const modulesData = await modulesRes.json();
+        const imagesData = await imagesRes.json();
+        const contentData = await contentRes.json();
 
-        const moduleMap = {};
-        modules.forEach(m => { moduleMap[m.moduleName] = m; });
+        cmsData.config = configData.data || configData;
+        cmsData.images = imagesData.data || imagesData;
+        cmsData.contentItems = contentData.data || contentData;
 
-        const factoryItems = contentItems.filter(item => item.section === 'factory');
-        const advantageItems = contentItems.filter(item => item.section === 'advantage');
-
-        loadBannerContent(moduleMap, config, images);
-        loadAboutContent(moduleMap, config, images);
-        loadStatsContent(config);
-        loadEventContent(config);
-        loadContactContent(config);
-        loadBrandContent(config);
-        loadProductsContent(images);
-        loadFactoryContent(factoryItems);
-        loadAdvantageContent(advantageItems);
+        cmsData.modules = {};
+        const modulesArray = Array.isArray(modulesData.data) ? modulesData.data : (Array.isArray(modulesData) ? modulesData : []);
+        modulesArray.forEach(m => { cmsData.modules[m.moduleName] = m; });
     } catch(e) {
         console.log('CMS data loading failed, using defaults');
     }
+}
+
+function getLangSpecificField(obj, baseField) {
+    const lang = getCurrentLang();
+    const langField = (lang === 'zh' ? 'zh' : 'en') + baseField.charAt(0).toUpperCase() + baseField.slice(1);
+    if (obj[langField]) return obj[langField];
+    // 如果没有对应语言的内容，返回非多语言字段作为后备
+    return obj[baseField] || '';
+}
+
+function applyCMSContent() {
+    const { config, modules, images, contentItems } = cmsData;
+    const moduleMap = modules;
+
+    const factoryItems = contentItems.filter(item => item.section === 'factory');
+    const advantageItems = contentItems.filter(item => item.section === 'advantage');
+
+    loadBannerContent(moduleMap, config, images);
+    loadAboutContent(moduleMap, config, images);
+    loadStatsContent(config);
+    loadEventContent(config, moduleMap);
+    loadContactContent(config);
+    loadBrandContent(config);
+    loadProductsContent(images);
+    loadFactoryContent(factoryItems);
+    loadAdvantageContent(advantageItems);
 }
 
 function loadBannerContent(moduleMap, config, images) {
@@ -42,11 +72,15 @@ function loadBannerContent(moduleMap, config, images) {
     if (bannerText) {
         const h1 = bannerText.querySelector('h1');
         const p = bannerText.querySelector('p');
-        if (h1 && (bannerModule.title || config.banner?.title)) {
-            h1.innerHTML = bannerModule.title || config.banner?.title;
+        const title = getLangSpecificField(bannerModule, 'title') || config.banner?.title;
+        const subtitle = getLangSpecificField(bannerModule, 'subtitle') || config.banner?.subtitle;
+        const content = getLangSpecificField(bannerModule, 'content') || config.banner?.content;
+        
+        if (h1 && title) {
+            h1.innerHTML = title;
         }
-        if (p && (bannerModule.subtitle || config.banner?.subtitle)) {
-            p.textContent = bannerModule.subtitle || config.banner?.subtitle;
+        if (p && subtitle) {
+            p.textContent = subtitle;
         }
     }
 
@@ -65,21 +99,24 @@ function loadAboutContent(moduleMap, config, images) {
     if (aboutModule.enabled === false) return;
 
     const aboutTitle = document.getElementById('aboutTitle');
-    if (aboutTitle && (aboutModule.title || config.about?.title)) {
-        aboutTitle.textContent = aboutModule.title || config.about?.title;
+    const title = getLangSpecificField(aboutModule, 'title') || config.about?.title;
+    if (aboutTitle && title) {
+        aboutTitle.textContent = title;
     }
 
     const aboutSubtitle = document.getElementById('aboutSubtitle');
-    if (aboutSubtitle && (aboutModule.subtitle || config.about?.subtitle)) {
-        aboutSubtitle.textContent = aboutModule.subtitle || config.about?.subtitle;
+    const subtitle = getLangSpecificField(aboutModule, 'subtitle') || config.about?.subtitle;
+    if (aboutSubtitle && subtitle) {
+        aboutSubtitle.textContent = subtitle;
     }
 
     const aboutLeftTitle = document.getElementById('aboutLeftTitle');
-    if (aboutLeftTitle && (aboutModule.content || config.about?.left_title)) {
-        aboutLeftTitle.textContent = aboutModule.content || config.about?.left_title;
+    const leftTitle = aboutModule.zh_left_title || aboutModule.en_left_title || aboutModule.content || config.about?.left_title;
+    if (aboutLeftTitle) {
+        aboutLeftTitle.textContent = getCurrentLang() === 'zh' ? (aboutModule.zh_left_title || aboutModule.content) : (aboutModule.en_left_title || aboutModule.content);
     }
 
-    const contentToShow = aboutModule.content || config.about?.content;
+    const contentToShow = getLangSpecificField(aboutModule, 'content') || config.about?.content;
     if (contentToShow) {
         const container = document.getElementById('aboutContentContainer');
         if (container) {
@@ -117,30 +154,42 @@ function loadStatsContent(config) {
     }
 }
 
-function loadEventContent(config) {
-    if (config.event && config.event.name) {
-        const eventCard = document.querySelector('#events .event-card');
-        if (eventCard) {
-            eventCard.querySelector('.event-content h3').textContent = config.event.name;
-            if (config.event.description) {
-                eventCard.querySelector('.event-content p').textContent = config.event.description;
-            }
-            eventCard.querySelector('.event-booth').textContent = 'Booth: ' + (config.event.booth || 'F11');
-            eventCard.querySelector('.event-date').textContent = '📅 ' + (config.event.date || 'June 17-19, 2026') + ' | ' + (config.event.location || 'Miami Beach Convention Center');
-        }
+function loadEventContent(config, moduleMap) {
+    const eventsModule = moduleMap['events'] || config.event || {};
+    if (eventsModule.enabled === false) return;
 
-        if (config.event.left_icon) {
-            const leftIcon = document.getElementById('eventLeftIcon');
-            if (leftIcon) leftIcon.textContent = config.event.left_icon;
+    const eventCard = document.querySelector('#events .event-card');
+    if (eventCard) {
+        const eventName = getCurrentLang() === 'zh' ? (eventsModule.zhName || eventsModule.name) : (eventsModule.enName || eventsModule.name);
+        if (eventName) {
+            eventCard.querySelector('.event-content h3').textContent = eventName;
         }
-        if (config.event.left_title) {
-            const leftTitle = document.getElementById('eventLeftTitle');
-            if (leftTitle) leftTitle.textContent = config.event.left_title;
+        
+        const eventDescription = getCurrentLang() === 'zh' ? (eventsModule.zhDescription || eventsModule.description) : (eventsModule.enDescription || eventsModule.description);
+        if (eventDescription) {
+            eventCard.querySelector('.event-content p').textContent = eventDescription;
         }
-        if (config.event.left_subtitle) {
-            const leftSubtitle = document.getElementById('eventLeftSubtitle');
-            if (leftSubtitle) leftSubtitle.textContent = config.event.left_subtitle;
-        }
+        
+        const eventLocation = getCurrentLang() === 'zh' ? (eventsModule.zhLocation || eventsModule.location) : (eventsModule.enLocation || eventsModule.location);
+        eventCard.querySelector('.event-booth').textContent = 'Booth: ' + (eventsModule.booth || 'F11');
+        eventCard.querySelector('.event-date').textContent = '📅 ' + (eventsModule.start_date || 'June 17-19, 2026') + ' | ' + (eventLocation || 'Miami Beach Convention Center');
+    }
+
+    if (eventsModule.left_icon || eventsModule.icon) {
+        const leftIcon = document.getElementById('eventLeftIcon');
+        if (leftIcon) leftIcon.textContent = eventsModule.left_icon || eventsModule.icon || '🏥';
+    }
+    
+    const leftTitle = getCurrentLang() === 'zh' ? (eventsModule.zhLeftTitle || eventsModule.left_title) : (eventsModule.enLeftTitle || eventsModule.left_title);
+    if (leftTitle) {
+        const leftTitleEl = document.getElementById('eventLeftTitle');
+        if (leftTitleEl) leftTitleEl.textContent = leftTitle;
+    }
+    
+    const leftSubtitle = getCurrentLang() === 'zh' ? (eventsModule.zhLeftSubtitle || eventsModule.left_subtitle) : (eventsModule.enLeftSubtitle || eventsModule.left_subtitle);
+    if (leftSubtitle) {
+        const leftSubtitleEl = document.getElementById('eventLeftSubtitle');
+        if (leftSubtitleEl) leftSubtitleEl.textContent = leftSubtitle;
     }
 }
 
@@ -236,12 +285,15 @@ function loadFactoryContent(factoryItems) {
                 const imageHtml = item.image_path
                     ? `<img src="/uploads/${item.image_path}" style="width:100%;height:150px;object-fit:cover;border-radius:10px;" />`
                     : `<div class="factory-icon">${item.icon || '🏭'}</div>`;
+                
+                const title = getCurrentLang() === 'zh' ? (item.zhTitle || item.title) : (item.enTitle || item.title);
+                const description = getCurrentLang() === 'zh' ? (item.zhDescription || item.description) : (item.enDescription || item.description);
 
                 return `
                     <div class="factory-item">
                         ${imageHtml}
-                        <h4>${item.title}</h4>
-                        <p>${item.description}</p>
+                        <h4>${title}</h4>
+                        <p>${description}</p>
                     </div>
                 `;
             }).join('');
@@ -257,12 +309,15 @@ function loadAdvantageContent(advantageItems) {
                 const imageHtml = item.image_path
                     ? `<img src="/uploads/${item.image_path}" style="width:80px;height:80px;object-fit:cover;border-radius:50%;" />`
                     : `<div class="adv-icon">${item.icon || '⭐'}</div>`;
+                
+                const title = getCurrentLang() === 'zh' ? (item.zhTitle || item.title) : (item.enTitle || item.title);
+                const description = getCurrentLang() === 'zh' ? (item.zhDescription || item.description) : (item.enDescription || item.description);
 
                 return `
                     <div class="adv-item">
                         ${imageHtml}
-                        <h4>${item.title}</h4>
-                        <p>${item.description}</p>
+                        <h4>${title}</h4>
+                        <p>${description}</p>
                     </div>
                 `;
             }).join('');

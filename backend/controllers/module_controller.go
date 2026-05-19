@@ -1,10 +1,11 @@
 package controllers
 
 import (
-	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"medical-device-cms/backend/common"
 	"medical-device-cms/backend/config"
 	"medical-device-cms/backend/services"
 )
@@ -24,17 +25,17 @@ func (c *ModuleController) GetPageConfig(ctx *gin.Context) {
 	if pageName != "" {
 		data, err := config.GetPageConfig(pageName)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			common.JSONInternalServerError(ctx, err.Error())
 			return
 		}
-		ctx.JSON(http.StatusOK, data)
+		common.JSONSuccess(ctx, data)
 	} else {
 		configs, err := config.GetAllPageConfigs()
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			common.JSONInternalServerError(ctx, err.Error())
 			return
 		}
-		ctx.JSON(http.StatusOK, configs)
+		common.JSONSuccess(ctx, configs)
 	}
 }
 
@@ -45,40 +46,40 @@ func (c *ModuleController) UpdatePageConfig(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		common.JSONBadRequest(ctx, "Invalid request parameters")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Config updated"})
+	common.JSONSuccessWithMessage(ctx, nil, "Config updated")
 }
 
 func (c *ModuleController) GetPublicPageConfig(ctx *gin.Context) {
 	configs, err := config.GetAllPageConfigs()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, configs)
+	common.JSONSuccess(ctx, configs)
 }
 
 func (c *ModuleController) GetModuleConfigs(ctx *gin.Context) {
 	moduleName := ctx.Query("module")
 	configs, err := c.moduleService.GetModuleConfigs(moduleName)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, configs)
+	common.JSONSuccess(ctx, configs)
 }
 
 func (c *ModuleController) GetModuleConfig(ctx *gin.Context) {
 	name := ctx.Param("name")
 	config, err := c.moduleService.GetModuleConfig(name)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, config)
+	common.JSONSuccess(ctx, config)
 }
 
 func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
@@ -93,7 +94,7 @@ func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
 	}
 
 	if moduleName == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "moduleName is required"})
+		common.JSONBadRequest(ctx, "moduleName is required")
 		return
 	}
 
@@ -102,7 +103,7 @@ func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
 	}
 
 	contentType := ctx.GetHeader("Content-Type")
-	if contentType == "multipart/form-data" {
+	if strings.Contains(contentType, "multipart/form-data") {
 		updates["enabled"] = ctx.PostForm("enabled")
 		updates["title"] = ctx.PostForm("title")
 		updates["subtitle"] = ctx.PostForm("subtitle")
@@ -110,6 +111,14 @@ func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
 		updates["sortOrder"] = ctx.PostForm("sortOrder")
 		updates["description"] = ctx.PostForm("description")
 		updates["extraData"] = ctx.PostForm("extraData")
+		updates["zhTitle"] = ctx.PostForm("zhTitle")
+		updates["enTitle"] = ctx.PostForm("enTitle")
+		updates["zhSubtitle"] = ctx.PostForm("zhSubtitle")
+		updates["enSubtitle"] = ctx.PostForm("enSubtitle")
+		updates["zhContent"] = ctx.PostForm("zhContent")
+		updates["enContent"] = ctx.PostForm("enContent")
+		updates["zhDescription"] = ctx.PostForm("zhDescription")
+		updates["enDescription"] = ctx.PostForm("enDescription")
 
 		file, err := ctx.FormFile("image")
 		if err == nil && file != nil {
@@ -138,27 +147,27 @@ func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
 
 	config, err := c.moduleService.SaveModuleConfig(moduleName, updates)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, config)
+	common.JSONSuccess(ctx, config)
 }
 
 func (c *ModuleController) DeleteModuleConfig(ctx *gin.Context) {
 	name := ctx.Param("name")
 	err := c.moduleService.DeleteModuleConfig(name)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Module config not found"})
+		common.JSONNotFound(ctx, "Module config not found")
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "Module config deleted successfully"})
+	common.JSONSuccessWithMessage(ctx, nil, "Module config deleted successfully")
 }
 
 func (c *ModuleController) GetPublicModuleConfigs(ctx *gin.Context) {
 	configs, err := c.moduleService.GetPublicModuleConfigs()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		common.JSONInternalServerError(ctx, err.Error())
 		return
 	}
-	ctx.JSON(http.StatusOK, configs)
+	common.JSONSuccess(ctx, configs)
 }

@@ -44,20 +44,32 @@ type ModuleConfig struct {
 	gorm.Model
 	ModuleName  string `gorm:"uniqueIndex;not null" json:"moduleName"`
 	Enabled     bool   `gorm:"default:true" json:"enabled"`
-	Title       string `json:"title"`
-	Subtitle    string `json:"subtitle"`
-	Content     string `gorm:"type:text" json:"content"`
+	ZhTitle     string `json:"zhTitle"`
+	EnTitle     string `json:"enTitle"`
+	ZhSubtitle  string `json:"zhSubtitle"`
+	EnSubtitle  string `json:"enSubtitle"`
+	ZhContent   string `gorm:"type:text" json:"zhContent"`
+	EnContent   string `gorm:"type:text" json:"enContent"`
+	Title       string `json:"title"`    // 向后兼容
+	Subtitle    string `json:"subtitle"` // 向后兼容
+	Content     string `gorm:"type:text" json:"content"` // 向后兼容
 	ImagePath   string `json:"imagePath"`
 	SortOrder   int    `gorm:"default:0" json:"sortOrder"`
 	ExtraData   string `gorm:"type:text" json:"extraData"`
-	Description string `json:"description"`
+	ZhDescription string `json:"zhDescription"`
+	EnDescription string `json:"enDescription"`
+	Description string `json:"description"` // 向后兼容
 }
 
 type ContentItem struct {
 	gorm.Model
 	Section     string `gorm:"not null" json:"section"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	ZhTitle     string `json:"zhTitle"`
+	EnTitle     string `json:"enTitle"`
+	ZhDescription string `json:"zhDescription"`
+	EnDescription string `json:"enDescription"`
+	Title       string `json:"title"`       // 向后兼容
+	Description string `json:"description"` // 向后兼容
 	Icon        string `json:"icon"`
 	ImagePath   string `json:"image_path"`
 	SortOrder   int    `gorm:"default:0" json:"sort_order"`

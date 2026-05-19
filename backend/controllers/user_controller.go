@@ -1,9 +1,8 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"medical-device-cms/backend/common"
 	"medical-device-cms/backend/services"
 )
 
@@ -24,22 +23,23 @@ func (c *UserController) Login(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		common.JSONBadRequest(ctx, "Invalid request parameters")
 		return
 	}
 
 	user, token, err := c.userService.Login(req.Username, req.Password)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		common.JSONUnauthorized(ctx, "Invalid credentials")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	data := gin.H{
 		"token": token,
 		"user": gin.H{
 			"id":       user.ID,
 			"username": user.Username,
 			"role":     user.Role,
 		},
-	})
+	}
+	common.JSONSuccess(ctx, data)
 }
