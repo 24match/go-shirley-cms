@@ -123,11 +123,11 @@ let currentLang = 'en';
 let dynamicTranslations = { en: {}, zh: {} };
 let translationsLoaded = false;
 
-function getCurrentLang() {
+export function getCurrentLang() {
     return currentLang;
 }
 
-function setLang(lang) {
+export function setLang(lang) {
     if (defaultTranslations[lang]) {
         currentLang = lang;
         localStorage.setItem('preferredLang', lang);
@@ -136,7 +136,7 @@ function setLang(lang) {
     }
 }
 
-function translate(key) {
+export function translate(key) {
     const dynamic = dynamicTranslations[currentLang][key];
     if (dynamic !== undefined && dynamic !== null && dynamic !== '') {
         return dynamic;
@@ -144,7 +144,7 @@ function translate(key) {
     return defaultTranslations[currentLang][key] || key;
 }
 
-function applyTranslations() {
+export function applyTranslations() {
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
         const translation = translate(key);
@@ -166,7 +166,7 @@ function applyTranslations() {
     }
 }
 
-async function loadTranslationsFromAPI() {
+export async function loadTranslationsFromAPI() {
     try {
         const res = await fetch('/api/public/lang');
         if (res.ok) {
@@ -182,10 +182,8 @@ async function loadTranslationsFromAPI() {
     }
 }
 
-function initI18n() {
+export function initI18n() {
     const savedLang = localStorage.getItem('preferredLang') || 'en';
     setLang(savedLang);
     loadTranslationsFromAPI();
 }
-
-document.addEventListener('DOMContentLoaded', initI18n);

@@ -1,9 +1,10 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
 	"medical-device-cms/backend/controllers"
 	"medical-device-cms/backend/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 func RegisterRoutes(r *gin.Engine) {
@@ -38,6 +39,7 @@ func registerAdminRoutes(api *gin.RouterGroup) {
 	admin.POST("/images", controllers.NewImageController().UploadImage)
 	admin.POST("/images/batch", controllers.NewImageController().UploadMultipleImages)
 	admin.PUT("/images/:id", controllers.NewImageController().UpdateImage)
+	admin.DELETE("/images/by-filename/:filename", controllers.NewImageController().DeleteImageByFilename)
 	admin.DELETE("/images/:id", controllers.NewImageController().DeleteImage)
 
 	admin.GET("/config", controllers.NewModuleController().GetPageConfig)
@@ -48,6 +50,7 @@ func registerAdminRoutes(api *gin.RouterGroup) {
 	admin.POST("/modules", controllers.NewModuleController().SaveModuleConfig)
 	admin.PUT("/modules/:name", controllers.NewModuleController().SaveModuleConfig)
 	admin.DELETE("/modules/:name", controllers.NewModuleController().DeleteModuleConfig)
+	admin.DELETE("/modules/:name/image", controllers.NewModuleController().DeleteModuleImage)
 
 	admin.GET("/content", controllers.NewContentController().GetContentItems)
 	admin.POST("/content", controllers.NewContentController().CreateContentItem)

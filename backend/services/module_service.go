@@ -180,6 +180,22 @@ func (s *ModuleService) DeleteModuleConfig(name string) error {
 	return config.DB.Delete(&moduleConfig).Error
 }
 
+func (s *ModuleService) DeleteModuleImage(name string) error {
+	var moduleConfig models.ModuleConfig
+	if err := config.DB.Where("module_name = ?", name).First(&moduleConfig).Error; err != nil {
+		return err
+	}
+
+	if moduleConfig.ImagePath == "" {
+		return nil
+	}
+
+	os.Remove("./uploads/" + moduleConfig.ImagePath)
+
+	moduleConfig.ImagePath = ""
+	return config.DB.Save(&moduleConfig).Error
+}
+
 func (s *ModuleService) GetPublicModuleConfigs() ([]models.ModuleConfig, error) {
 	var moduleConfigs []models.ModuleConfig
 	err := config.DB.Where("enabled = ?", true).Order("sort_order ASC").Find(&moduleConfigs).Error

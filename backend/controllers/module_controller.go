@@ -1,13 +1,13 @@
 package controllers
 
 import (
-	"os"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"medical-device-cms/backend/common"
 	"medical-device-cms/backend/config"
 	"medical-device-cms/backend/services"
+
+	"github.com/gin-gonic/gin"
 )
 
 type ModuleController struct {
@@ -122,7 +122,14 @@ func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
 
 		file, err := ctx.FormFile("image")
 		if err == nil && file != nil {
-			data, _ := os.ReadFile(file.Filename)
+			fileData, err := file.Open()
+			if err != nil {
+				common.JSONInternalServerError(ctx, "Could not open file")
+				return
+			}
+			defer fileData.Close()
+			data := make([]byte, file.Size)
+			fileData.Read(data)
 			updates["file"] = map[string]interface{}{
 				"filename": file.Filename,
 				"data":     data,
@@ -161,6 +168,16 @@ func (c *ModuleController) DeleteModuleConfig(ctx *gin.Context) {
 		return
 	}
 	common.JSONSuccessWithMessage(ctx, nil, "Module config deleted successfully")
+}
+
+func (c *ModuleController) DeleteModuleImage(ctx *gin.Context) {
+	moduleName := ctx.Param("name")
+	err := c.moduleService.DeleteModuleImage(moduleName)
+	if err != nil {
+		common.JSONNotFound(ctx, "Module image not found")
+		return
+	}
+	common.JSONSuccessWithMessage(ctx, nil, "Module image deleted successfully")
 }
 
 func (c *ModuleController) GetPublicModuleConfigs(ctx *gin.Context) {

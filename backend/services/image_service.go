@@ -97,6 +97,16 @@ func (s *ImageService) DeleteImage(id uint) error {
 	return config.DB.Delete(&image).Error
 }
 
+func (s *ImageService) DeleteImageByFilename(filename string) error {
+	var image models.Image
+	if err := config.DB.Where("filename = ?", filename).First(&image).Error; err != nil {
+		return err
+	}
+
+	os.Remove(image.FilePath)
+	return config.DB.Delete(&image).Error
+}
+
 func (s *ImageService) UpdateImage(id uint, updates map[string]interface{}) (*models.Image, error) {
 	var image models.Image
 	if err := config.DB.First(&image, id).Error; err != nil {

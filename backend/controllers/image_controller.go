@@ -6,9 +6,10 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"medical-device-cms/backend/common"
 	"medical-device-cms/backend/services"
+
+	"github.com/gin-gonic/gin"
 )
 
 type ImageController struct {
@@ -116,6 +117,16 @@ func (c *ImageController) DeleteImage(ctx *gin.Context) {
 	common.JSONSuccessWithMessage(ctx, nil, "Image deleted successfully")
 }
 
+func (c *ImageController) DeleteImageByFilename(ctx *gin.Context) {
+	filename := ctx.Param("filename")
+	err := c.imageService.DeleteImageByFilename(filename)
+	if err != nil {
+		common.JSONNotFound(ctx, "Image not found")
+		return
+	}
+	common.JSONSuccessWithMessage(ctx, nil, "Image deleted successfully")
+}
+
 func (c *ImageController) UpdateImage(ctx *gin.Context) {
 	id, _ := strconv.ParseUint(ctx.Param("id"), 10, 32)
 
@@ -127,7 +138,14 @@ func (c *ImageController) UpdateImage(ctx *gin.Context) {
 	if contentType == "multipart/form-data" {
 		file, err := ctx.FormFile("image")
 		if err == nil && file != nil {
-			data, _ := os.ReadFile(file.Filename)
+			fileData, err := file.Open()
+			if err != nil {
+				common.JSONInternalServerError(ctx, "Could not open file")
+				return
+			}
+			defer fileData.Close()
+			data := make([]byte, file.Size)
+			fileData.Read(data)
 			updates["file"] = map[string]interface{}{
 				"filename": file.Filename,
 				"data":     data,
