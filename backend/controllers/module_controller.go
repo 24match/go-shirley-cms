@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"strings"
 
 	"medical-device-cms/backend/common"
@@ -119,6 +120,41 @@ func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
 		updates["enContent"] = ctx.PostForm("enContent")
 		updates["zhDescription"] = ctx.PostForm("zhDescription")
 		updates["enDescription"] = ctx.PostForm("enDescription")
+
+		extraDataMap := make(map[string]interface{})
+		if existingExtra := ctx.PostForm("extraData"); existingExtra != "" {
+			if err := json.Unmarshal([]byte(existingExtra), &extraDataMap); err != nil {
+				extraDataMap = make(map[string]interface{})
+			}
+		}
+
+		if zhName := ctx.PostForm("zhName"); zhName != "" {
+			extraDataMap["zh_name"] = zhName
+		}
+		if enName := ctx.PostForm("enName"); enName != "" {
+			extraDataMap["en_name"] = enName
+		}
+		if booth := ctx.PostForm("booth"); booth != "" {
+			extraDataMap["booth"] = booth
+		}
+		if startDate := ctx.PostForm("startDate"); startDate != "" {
+			extraDataMap["start_date"] = startDate
+		}
+		if endDate := ctx.PostForm("endDate"); endDate != "" {
+			extraDataMap["end_date"] = endDate
+		}
+		if zhLocation := ctx.PostForm("zhLocation"); zhLocation != "" {
+			extraDataMap["zh_location"] = zhLocation
+		}
+		if enLocation := ctx.PostForm("enLocation"); enLocation != "" {
+			extraDataMap["en_location"] = enLocation
+		}
+
+		if len(extraDataMap) > 0 {
+			if updatedExtra, err := json.Marshal(extraDataMap); err == nil {
+				updates["extraData"] = string(updatedExtra)
+			}
+		}
 
 		file, err := ctx.FormFile("image")
 		if err == nil && file != nil {

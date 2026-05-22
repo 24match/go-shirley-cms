@@ -39,12 +39,15 @@ export function loadAboutContent() {
         }
     }
 
-    const aboutImg = images.find(i => i.category === 'about');
-    if (aboutImg) {
-        const imgEl = document.querySelector('#about .about-img img');
-        if (imgEl) imgEl.src = `/uploads/${aboutImg.filename}`;
-    } else if (aboutModule.imagePath) {
-        const imgEl = document.querySelector('#about .about-img img');
-        if (imgEl) imgEl.src = `/uploads/${aboutModule.imagePath}`;
+    const imgEl = document.querySelector('#about .about-img img');
+    if (imgEl) {
+        if (aboutModule.imagePath) {
+            imgEl.src = `/uploads/${aboutModule.imagePath}`;
+        } else {
+            const aboutImg = images.find(i => i.category === 'about');
+            if (aboutImg) {
+                imgEl.src = `/uploads/${aboutImg.filename}`;
+            }
+        }
     }
 }

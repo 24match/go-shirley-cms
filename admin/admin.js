@@ -162,7 +162,7 @@ async function saveAboutConfig() {
   formData.append('enSubtitle', document.getElementById('aboutEnSubtitle').value);
   formData.append('zhContent', document.getElementById('aboutZhContent').value);
   formData.append('enContent', document.getElementById('aboutEnContent').value);
-  formData.append('extraData', JSON.stringify({ zh_left_title: document.getElementById('aboutZhLeftTitle').value, en_left_title: document.getElementById('aboutEnLeftTitle').value, left_title: document.getElementById('aboutZhLeftTitle').value }));
+  formData.append('extraData', JSON.stringify({ zhLeftTitle: document.getElementById('aboutZhLeftTitle').value, enLeftTitle: document.getElementById('aboutEnLeftTitle').value, leftTitle: document.getElementById('aboutZhLeftTitle').value }));
   if (aboutUploadedFile) formData.append('image', aboutUploadedFile);
   const success = await saveModuleConfig('about', formData);
   if (success) aboutUploadedFile = null;
@@ -174,8 +174,8 @@ function loadAboutConfig(about) {
   document.getElementById('aboutEnTitle').value = about.enTitle || '';
   document.getElementById('aboutZhSubtitle').value = about.zhSubtitle || about.subtitle || '';
   document.getElementById('aboutEnSubtitle').value = about.enSubtitle || '';
-  document.getElementById('aboutZhLeftTitle').value = about.zh_left_title || about.left_title || '';
-  document.getElementById('aboutEnLeftTitle').value = about.en_left_title || '';
+  document.getElementById('aboutZhLeftTitle').value = about.zhLeftTitle || about.leftTitle || '';
+  document.getElementById('aboutEnLeftTitle').value = about.enLeftTitle || '';
   document.getElementById('aboutZhContent').value = about.zhContent || about.content || '';
   document.getElementById('aboutEnContent').value = about.enContent || '';
   if (about.imagePath) {
@@ -187,13 +187,13 @@ function loadAboutConfig(about) {
 async function loadProducts() {
   const res = await apiFetch('/api/admin/images?category=products');
   const images = (await res.json()).data || [];
-  images.sort((a, b) => a.sort_order - b.sort_order);
+  images.sort((a, b) => a.sortOrder - b.sortOrder);
   const list = document.getElementById('productsList');
   if (images.length === 0) {
     list.innerHTML = '<div style="text-align:center;color:#999;padding:50px;"><div style="font-size:48px;margin-bottom:15px;">📦</div><p>暂无产品数据，请添加产品</p></div>';
     return;
   }
-  list.innerHTML = images.map(img => `<div class="product-item"><img src="/uploads/${img.filename}" alt="${img.description}"><h4>${img.description || '未命名产品'}</h4><p>${img.long_description || '暂无描述'}</p><div class="actions"><button class="btn btn-primary" onclick="editProductItem(${img.id}, '${img.description || ''}', '${img.long_description || ''}', '${img.filename}', ${img.sort_order})">编辑</button><button class="btn btn-danger" onclick="deleteProductImage(${img.id})">删除</button></div></div>`).join('');
+  list.innerHTML = images.map(img => `<div class="product-item"><img src="/uploads/${img.filename}" alt="${img.description}"><h4>${img.description || '未命名产品'}</h4><p>${img.longDescription || '暂无描述'}</p><div class="actions"><button class="btn btn-primary" onclick="editProductItem(${img.id}, '${img.description || ''}', '${img.longDescription || ''}', '${img.filename}', ${img.sortOrder})">编辑</button><button class="btn btn-danger" onclick="deleteProductImage(${img.id})">删除</button></div></div>`).join('');
 }
 
 function addProductItem() {
@@ -271,12 +271,13 @@ async function saveProductItem() {
   const formData = new FormData();
   formData.append('category', 'products');
   formData.append('description', document.getElementById('productName').value);
-  formData.append('long_description', document.getElementById('productDescription').value);
-  formData.append('sort_order', document.getElementById('productSortOrder').value);
+  formData.append('longDescription', document.getElementById('productDescription').value);
+  formData.append('sortOrder', document.getElementById('productSortOrder').value);
   if (productUploadedFiles.length > 0) formData.append('image', productUploadedFiles[0]);
-  else formData.append('image_path', document.getElementById('productImagePath').value);
-  const url = id ? `/api/admin/images/${id}` : '/api/admin/images';
-  const res = await apiFetch(url, { method: id ? 'PUT' : 'POST', body: formData });
+  else formData.append('imagePath', document.getElementById('productImagePath').value);
+  const isValidProductId = id && id !== 'undefined' && id.trim() !== '';
+  const url = isValidProductId ? `/api/admin/images/${id}` : '/api/admin/images';
+  const res = await apiFetch(url, { method: isValidProductId ? 'PUT' : 'POST', body: formData });
   if (res.ok) { closeProductModal(); loadProducts(); showToast('产品保存成功！'); }
   else showToast('保存失败', 'error');
 }
@@ -290,7 +291,7 @@ async function deleteProductImage(id) {
 function loadProductsConfig(products) {
   document.getElementById('productsEnabled').checked = products.enabled !== false;
   document.getElementById('productsTitle').value = products.title || '';
-  document.getElementById('productsCount').value = products.show_count || 6;
+  document.getElementById('productsCount').value = products.showCount || 6;
 }
 
 async function saveProductsModuleConfig() {
@@ -298,7 +299,7 @@ async function saveProductsModuleConfig() {
   formData.append('moduleName', 'products');
   formData.append('enabled', document.getElementById('productsEnabled').checked);
   formData.append('title', document.getElementById('productsTitle').value);
-  formData.append('extraData', JSON.stringify({ show_count: parseInt(document.getElementById('productsCount').value) }));
+  formData.append('extraData', JSON.stringify({ showCount: parseInt(document.getElementById('productsCount').value) }));
   const res = await apiFetch('/api/admin/modules', { method: 'POST', body: formData });
   if (res.ok) showToast('配置保存成功！');
   else { const err = await res.json(); showToast('保存失败: ' + (err.error || '未知错误'), 'error'); }
@@ -406,43 +407,44 @@ async function saveContentItem() {
   const id = document.getElementById('contentItemId').value;
   const sectionType = document.getElementById('contentSectionType').value;
   const formData = new FormData();
-  formData.append('category', sectionType);
-  formData.append('zh_title', document.getElementById('contentZhTitle').value);
-  formData.append('en_title', document.getElementById('contentEnTitle').value);
-  formData.append('zh_description', document.getElementById('contentZhDescription').value);
-  formData.append('en_description', document.getElementById('contentEnDescription').value);
+  formData.append('section', sectionType);
+  formData.append('zhTitle', document.getElementById('contentZhTitle').value);
+  formData.append('enTitle', document.getElementById('contentEnTitle').value);
+  formData.append('zhDescription', document.getElementById('contentZhDescription').value);
+  formData.append('enDescription', document.getElementById('contentEnDescription').value);
   formData.append('icon', document.getElementById('contentIcon').value);
-  formData.append('sort_order', document.getElementById('contentSortOrder').value);
+  formData.append('sortOrder', document.getElementById('contentSortOrder').value);
   if (contentUploadedFile) formData.append('image', contentUploadedFile);
-  else formData.append('image_path', document.getElementById('contentImagePath').value);
-  const url = id ? `/api/admin/content/${id}` : '/api/admin/content';
-  const res = await apiFetch(url, { method: id ? 'PUT' : 'POST', body: formData });
+  else formData.append('imagePath', document.getElementById('contentImagePath').value);
+  const isValidId = id && id !== 'undefined' && id.trim() !== '';
+  const url = isValidId ? `/api/admin/content/${id}` : '/api/admin/content';
+  const res = await apiFetch(url, { method: isValidId ? 'PUT' : 'POST', body: formData });
   if (res.ok) { closeContentModal(); loadFactoryItems(); loadAdvantageItems(); showToast('保存成功！'); }
   else showToast('保存失败', 'error');
 }
 
 async function loadFactoryItems() {
-  const res = await apiFetch('/api/admin/content?category=factory');
+  const res = await apiFetch('/api/admin/content?section=factory');
   const items = (await res.json()).data || [];
-  items.sort((a, b) => a.sort_order - b.sort_order);
+  items.sort((a, b) => a.sortOrder - b.sortOrder);
   const list = document.getElementById('factoryList');
   if (items.length === 0) {
     list.innerHTML = '<div style="text-align:center;color:#999;padding:50px;"><div style="font-size:48px;margin-bottom:15px;">🏭</div><p>暂无工厂优势项目，请添加</p></div>';
     return;
   }
-  list.innerHTML = items.map(item => `<div class="content-item"><div class="icon">${item.icon || '🏭'}</div><div class="info"><h4>${item.zh_title || item.title || '未命名'}</h4><p>${item.zh_description || '暂无描述'}</p></div><div class="actions"><button class="btn btn-primary" onclick="editContentItem(${item.id}, 'factory', '${item.zh_title || ''}', '${item.en_title || ''}', '${item.zh_description || ''}', '${item.en_description || ''}', '${item.icon || ''}', ${item.sort_order})">编辑</button><button class="btn btn-danger" onclick="deleteContentItem(${item.id}, 'factory')">删除</button></div></div>`).join('');
+  list.innerHTML = items.map(item => `<div class="content-item"><div class="icon">${item.icon || '🏭'}</div><div class="info"><h4>${item.zhTitle || item.title || '未命名'}</h4><p>${item.zhDescription || '暂无描述'}</p></div><div class="actions"><button class="btn btn-primary" onclick="editContentItem(${item.id}, 'factory', '${item.zhTitle || ''}', '${item.enTitle || ''}', '${item.zhDescription || ''}', '${item.enDescription || ''}', '${item.icon || ''}', ${item.sortOrder})">编辑</button><button class="btn btn-danger" onclick="deleteContentItem(${item.id}, 'factory')">删除</button></div></div>`).join('');
 }
 
 async function loadAdvantageItems() {
-  const res = await apiFetch('/api/admin/content?category=advantage');
+  const res = await apiFetch('/api/admin/content?section=advantage');
   const items = (await res.json()).data || [];
-  items.sort((a, b) => a.sort_order - b.sort_order);
+  items.sort((a, b) => a.sortOrder - b.sortOrder);
   const list = document.getElementById('advantageList');
   if (items.length === 0) {
     list.innerHTML = '<div style="text-align:center;color:#999;padding:50px;"><div style="font-size:48px;margin-bottom:15px;">⭐</div><p>暂无核心优势项目，请添加</p></div>';
     return;
   }
-  list.innerHTML = items.map(item => `<div class="content-item"><div class="icon">${item.icon || '⭐'}</div><div class="info"><h4>${item.zh_title || item.title || '未命名'}</h4><p>${item.zh_description || '暂无描述'}</p></div><div class="actions"><button class="btn btn-primary" onclick="editContentItem(${item.id}, 'advantage', '${item.zh_title || ''}', '${item.en_title || ''}', '${item.zh_description || ''}', '${item.en_description || ''}', '${item.icon || ''}', ${item.sort_order})">编辑</button><button class="btn btn-danger" onclick="deleteContentItem(${item.id}, 'advantage')">删除</button></div></div>`).join('');
+  list.innerHTML = items.map(item => `<div class="content-item"><div class="icon">${item.icon || '⭐'}</div><div class="info"><h4>${item.zhTitle || item.title || '未命名'}</h4><p>${item.zhDescription || '暂无描述'}</p></div><div class="actions"><button class="btn btn-primary" onclick="editContentItem(${item.id}, 'advantage', '${item.zhTitle || ''}', '${item.enTitle || ''}', '${item.zhDescription || ''}', '${item.enDescription || ''}', '${item.icon || ''}', ${item.sortOrder})">编辑</button><button class="btn btn-danger" onclick="deleteContentItem(${item.id}, 'advantage')">删除</button></div></div>`).join('');
 }
 
 function editContentItem(id, type, zhTitle, enTitle, zhDesc, enDesc, icon, sortOrder) {
@@ -482,7 +484,85 @@ function loadEventsConfig(events) {
   document.getElementById('eventsEnLeftSubtitle').value = events.enLeftSubtitle || '';
 }
 
+function validateEventDates() {
+  const startDateInput = document.getElementById('eventsStartDate');
+  const endDateInput = document.getElementById('eventsEndDate');
+  const startDate = startDateInput.value;
+  const endDate = endDateInput.value;
+  
+  clearDateValidationErrors();
+  
+  if (!startDate && endDate) {
+    showDateError(endDateInput, '请先选择展会的开始日期');
+    return false;
+  }
+  
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (end < start) {
+      showDateError(endDateInput, '结束日期不能早于开始日期');
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+function showDateError(input, message) {
+  input.style.borderColor = '#dc3545';
+  input.style.backgroundColor = '#fff8f8';
+  
+  let errorEl = input.parentNode.querySelector('.date-error');
+  if (!errorEl) {
+    errorEl = document.createElement('div');
+    errorEl.className = 'date-error';
+    errorEl.style.cssText = 'color:#dc3545;font-size:12px;margin-top:5px;display:flex;align-items:center;gap:5px;';
+    input.parentNode.appendChild(errorEl);
+  }
+  errorEl.innerHTML = `⚠️ ${message}`;
+}
+
+function clearDateValidationErrors() {
+  ['eventsStartDate', 'eventsEndDate'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) {
+      input.style.borderColor = '';
+      input.style.backgroundColor = '';
+      const errorEl = input.parentNode.querySelector('.date-error');
+      if (errorEl) errorEl.remove();
+    }
+  });
+}
+
+function initEventsDateValidation() {
+  const startDateInput = document.getElementById('eventsStartDate');
+  const endDateInput = document.getElementById('eventsEndDate');
+  
+  if (startDateInput) {
+    startDateInput.addEventListener('change', function() {
+      if (this.value && endDateInput.value) {
+        validateEventDates();
+      } else {
+        clearDateValidationErrors();
+      }
+    });
+  }
+  
+  if (endDateInput) {
+    endDateInput.addEventListener('change', function() {
+      validateEventDates();
+    });
+  }
+}
+
 async function saveEventsConfig() {
+  if (!validateEventDates()) {
+    showToast('请修正日期错误后再保存', 'error');
+    return false;
+  }
+  
   const formData = new FormData();
   formData.append('moduleName', 'events');
   formData.append('enabled', document.getElementById('eventsEnabled').checked);
@@ -497,12 +577,15 @@ async function saveEventsConfig() {
   formData.append('enDescription', document.getElementById('eventsEnDescription').value);
   formData.append('extraData', JSON.stringify({
     icon: document.getElementById('eventsIcon').value,
-    zh_left_title: document.getElementById('eventsZhLeftTitle').value,
-    en_left_title: document.getElementById('eventsEnLeftTitle').value,
-    zh_left_subtitle: document.getElementById('eventsZhLeftSubtitle').value,
-    en_left_subtitle: document.getElementById('eventsEnLeftSubtitle').value
+    zhLeftTitle: document.getElementById('eventsZhLeftTitle').value,
+    enLeftTitle: document.getElementById('eventsEnLeftTitle').value,
+    zhLeftSubtitle: document.getElementById('eventsZhLeftSubtitle').value,
+    enLeftSubtitle: document.getElementById('eventsEnLeftSubtitle').value
   }));
   const success = await saveModuleConfig('events', formData);
+  if (success) {
+    clearDateValidationErrors();
+  }
 }
 
 function loadContactConfig(contact) {
@@ -580,12 +663,12 @@ async function saveLangText() {
   const data = {
     key: document.getElementById('langKey').value,
     module: document.getElementById('langModule').value,
-    en_text: document.getElementById('langEnText').value,
-    zh_text: document.getElementById('langZhText').value,
+    enText: document.getElementById('langEnText').value,
+    zhText: document.getElementById('langZhText').value,
     description: document.getElementById('langDescription').value
   };
-  const url = id ? `/api/admin/lang/${id}` : '/api/admin/lang';
-  const res = await apiFetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  const url = id && id !== 'undefined' && id.trim() !== '' ? `/api/admin/lang/${id}` : '/api/admin/lang';
+  const res = await apiFetch(url, { method: id && id !== 'undefined' && id.trim() !== '' ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
   if (res.ok) { closeLangModal(); loadLangTexts(); showToast('文案保存成功！'); }
   else showToast('保存失败', 'error');
 }
@@ -600,7 +683,7 @@ async function loadLangTexts() {
     list.innerHTML = '<div style="text-align:center;color:#999;padding:50px;"><div style="font-size:48px;margin-bottom:15px;">📝</div><p>暂无文案数据，请添加文案</p></div>';
     return;
   }
-  list.innerHTML = texts.map(t => `<div class="content-item"><div class="icon">📝</div><div class="info"><h4>${t.key}</h4><p>${t.zh_text || t.en_text || '暂无内容'}</p></div><div class="actions"><button class="btn btn-primary" onclick="editLangText(${t.id}, '${t.key}', '${t.module}', '${t.en_text || ''}', '${t.zh_text || ''}', '${t.description || ''}')">编辑</button><button class="btn btn-danger" onclick="deleteLangText(${t.id})">删除</button></div></div>`).join('');
+  list.innerHTML = texts.map(t => `<div class="content-item"><div class="icon">📝</div><div class="info"><h4>${t.key}</h4><p>${t.zhText || t.enText || '暂无内容'}</p></div><div class="actions"><button class="btn btn-primary" onclick="editLangText(${t.id}, '${t.key}', '${t.module}', '${t.enText || ''}', '${t.zhText || ''}', '${t.description || ''}')">编辑</button><button class="btn btn-danger" onclick="deleteLangText(${t.id})">删除</button></div></div>`).join('');
 }
 
 function editLangText(id, key, module, enText, zhText, description) {
@@ -631,14 +714,30 @@ function showSection(sectionId) {
   if (sectionId === 'factory') loadFactoryItems();
   if (sectionId === 'advantage') loadAdvantageItems();
   if (sectionId === 'lang') loadLangTexts();
+  if (sectionId === 'events') initEventsDateValidation();
+  window.location.hash = sectionId;
 }
 
 function initApp() {
-  if (token) { 
-    document.getElementById('loginPage').style.display = 'none'; 
-    document.getElementById('adminPage').style.display = 'flex'; 
-    loadAllConfigs(); 
+  if (token) {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('adminPage').style.display = 'flex';
+    loadAllConfigs();
+    const hash = window.location.hash.replace('#', '');
+    const validSections = ['banner', 'about', 'products', 'factory', 'advantage', 'events', 'contact', 'system', 'lang'];
+    if (hash && validSections.includes(hash)) {
+      showSection(hash);
+    }
   }
 }
 
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', () => {
+  initApp();
+  window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.replace('#', '');
+    const validSections = ['banner', 'about', 'products', 'factory', 'advantage', 'events', 'contact', 'system', 'lang'];
+    if (hash && validSections.includes(hash)) {
+      showSection(hash);
+    }
+  });
+});

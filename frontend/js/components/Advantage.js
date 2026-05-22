@@ -9,8 +9,8 @@ export function loadAdvantageContent() {
         const advGrid = document.querySelector('.adv-grid');
         if (advGrid) {
             advGrid.innerHTML = advantageItems.map(item => {
-                const imageHtml = item.image_path
-                    ? `<img src="/uploads/${item.image_path}" style="width:80px;height:80px;object-fit:cover;border-radius:50%;" />`
+                const imageHtml = item.imagePath
+                    ? `<img src="/uploads/${item.imagePath}" style="width:80px;height:80px;object-fit:cover;border-radius:50%;" />`
                     : `<div class="adv-icon">${item.icon || '⭐'}</div>`;
                 
                 const title = getCurrentLangFromStorage() === 'zh' ? (item.zhTitle || item.title) : (item.enTitle || item.title);

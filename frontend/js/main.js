@@ -10,6 +10,7 @@ import { loadEventContent } from './components/Events.js';
 import { loadContactContent } from './components/Contact.js';
 import { loadBrandContent } from './components/Brand.js';
 import { loadCMSData, getCMSData } from './services/cmsService.js';
+import { waitForContentReady } from './utils/loadingManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initI18n();
@@ -23,8 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
             originalSetLang(lang);
             applyCMSContent();
         };
+        
+        return waitForContentReady();
     }).catch(err => {
         console.log('CMS data loading failed, using defaults');
+        waitForContentReady();
     });
     
     initializeLazyLoading();

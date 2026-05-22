@@ -14,7 +14,7 @@ export function loadBannerContent() {
         const p = bannerText.querySelector('p');
         const title = getLangSpecificField(bannerModule, 'title') || config.banner?.title;
         const subtitle = getLangSpecificField(bannerModule, 'subtitle') || config.banner?.subtitle;
-        
+
         if (h1 && title) {
             h1.innerHTML = title;
         }
@@ -23,10 +23,14 @@ export function loadBannerContent() {
         }
     }
 
-    const bannerImg = images.find(i => i.category === 'banner');
-    if (bannerImg && banner) {
-        banner.style.background = `linear-gradient(135deg,rgba(10,92,173,0.9) 0%,rgba(6,58,117,0.85) 100%),url('/uploads/${bannerImg.filename}') center/cover no-repeat`;
-    } else if (bannerModule.imagePath && banner) {
-        banner.style.background = `linear-gradient(135deg,rgba(10,92,173,0.9) 0%,rgba(6,58,117,0.85) 100%),url('/uploads/${bannerModule.imagePath}') center/cover no-repeat`;
+    if (banner) {
+        if (bannerModule.imagePath) {
+            banner.style.background = `linear-gradient(135deg,rgba(10,92,173,0.9) 0%,rgba(6,58,117,0.85) 100%),url('/uploads/${bannerModule.imagePath}') center/cover no-repeat`;
+        } else {
+            const bannerImg = images.find(i => i.category === 'banner');
+            if (bannerImg) {
+                banner.style.background = `linear-gradient(135deg,rgba(10,92,173,0.9) 0%,rgba(6,58,117,0.85) 100%),url('/uploads/${bannerImg.filename}') center/cover no-repeat`;
+            }
+        }
     }
 }

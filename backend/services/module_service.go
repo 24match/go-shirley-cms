@@ -196,8 +196,16 @@ func (s *ModuleService) DeleteModuleImage(name string) error {
 	return config.DB.Save(&moduleConfig).Error
 }
 
-func (s *ModuleService) GetPublicModuleConfigs() ([]models.ModuleConfig, error) {
+func (s *ModuleService) GetPublicModuleConfigs() ([]map[string]interface{}, error) {
 	var moduleConfigs []models.ModuleConfig
 	err := config.DB.Where("enabled = ?", true).Order("sort_order ASC").Find(&moduleConfigs).Error
-	return moduleConfigs, err
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	for _, mc := range moduleConfigs {
+		results = append(results, mergeExtraData(&mc))
+	}
+	return results, nil
 }

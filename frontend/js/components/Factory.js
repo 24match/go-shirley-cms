@@ -9,8 +9,8 @@ export function loadFactoryContent() {
         const factoryGrid = document.querySelector('.factory-grid');
         if (factoryGrid) {
             factoryGrid.innerHTML = factoryItems.map(item => {
-                const imageHtml = item.image_path
-                    ? `<img src="/uploads/${item.image_path}" style="width:100%;height:150px;object-fit:cover;border-radius:10px;" />`
+                const imageHtml = item.imagePath
+                    ? `<img src="/uploads/${item.imagePath}" style="width:100%;height:150px;object-fit:cover;border-radius:10px;" />`
                     : `<div class="factory-icon">${item.icon || '🏭'}</div>`;
                 
                 const title = getCurrentLangFromStorage() === 'zh' ? (item.zhTitle || item.title) : (item.enTitle || item.title);

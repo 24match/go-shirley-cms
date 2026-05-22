@@ -3,7 +3,7 @@ import { getCMSData } from '../services/cmsService.js';
 export function loadProductsContent() {
     const { images } = getCMSData();
     
-    const products = images.filter(i => i.category === 'products').sort((a, b) => a.sort_order - b.sort_order);
+    const products = images.filter(i => i.category === 'products').sort((a, b) => a.sortOrder - b.sortOrder);
     if (products.length > 0) {
         const productGrid = document.querySelector('.product-grid');
         if (productGrid) {
@@ -23,7 +23,7 @@ export function loadProductsContent() {
                         <div class="product-img lazy-bg" data-src="/uploads/${img.filename}"></div>
                         <div class="product-info">
                             <h4>${img.description || dp.title}</h4>
-                            <p>${img.long_description || dp.desc}</p>
+                            <p>${img.longDescription || dp.desc}</p>
                             <a href="#" class="learn-more" data-i18n="products.learnMore">Learn More →</a>
                         </div>
                     </div>
