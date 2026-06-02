@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"medical-device-cms/backend/common"
+	"medical-device-cms/backend/middleware"
 	"medical-device-cms/backend/services"
 )
 
@@ -20,8 +22,8 @@ func NewContentController() *ContentController {
 }
 
 // GetContentItems 获取内容项列表
-// @Summary 获取内容项列表
-// @Description 获取所有或指定区域的内容项列表
+// @Summary 获取当前租户的内容项列表
+// @Description 获取当前租户指定区域的内容项列表
 // @Tags 内容管理
 // @Accept json
 // @Produce json
@@ -31,8 +33,17 @@ func NewContentController() *ContentController {
 // @Security APIKey
 // @Router /api/admin/content [get]
 func (c *ContentController) GetContentItems(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	section := ctx.Query("section")
-	items, err := c.contentService.GetContentItems(section)
+	items, err := c.contentService.GetContentItemsByTenant(tenantID, section)
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return
@@ -42,7 +53,7 @@ func (c *ContentController) GetContentItems(ctx *gin.Context) {
 
 // CreateContentItem 创建内容项
 // @Summary 创建内容项
-// @Description 创建新的内容项，支持图片上传和多语言
+// @Description 创建新的内容项，支持图片上传和多语言（租户隔离）
 // @Tags 内容管理
 // @Accept multipart/form-data
 // @Produce json
@@ -59,6 +70,15 @@ func (c *ContentController) GetContentItems(ctx *gin.Context) {
 // @Security APIKey
 // @Router /api/admin/content [post]
 func (c *ContentController) CreateContentItem(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	section := ctx.PostForm("section")
 	title := ctx.PostForm("title")
 	description := ctx.PostForm("description")
@@ -71,8 +91,11 @@ func (c *ContentController) CreateContentItem(ctx *gin.Context) {
 	var imagePath string
 	file, err := ctx.FormFile("image")
 	if err == nil {
+		// 按租户组织上传目录
+		uploadDir := "./uploads/" + strconv.Itoa(int(tenantID))
+		os.MkdirAll(uploadDir, 0755)
 		filename := strconv.Itoa(os.Getpid()) + "_" + file.Filename
-		if err := ctx.SaveUploadedFile(file, "./uploads/"+filename); err != nil {
+		if err := ctx.SaveUploadedFile(file, uploadDir+"/"+filename); err != nil {
 			common.JSONInternalServerError(ctx, "Failed to save image")
 			return
 		}
@@ -81,7 +104,7 @@ func (c *ContentController) CreateContentItem(ctx *gin.Context) {
 		imagePath = ctx.PostForm("image_path")
 	}
 
-	item, err := c.contentService.CreateContentItem(section, title, description, imagePath, sortOrder, "", zhTitle, enTitle, zhDescription, enDescription)
+	item, err := c.contentService.CreateContentItem(tenantID, section, title, description, imagePath, sortOrder, "", zhTitle, enTitle, zhDescription, enDescription)
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return
@@ -183,7 +206,7 @@ func (c *ContentController) DeleteContentItem(ctx *gin.Context) {
 
 // GetPublicContentItems 获取公开内容项
 // @Summary 获取公开内容项
-// @Description 获取所有或指定区域的公开内容项（无需认证）
+// @Description 获取当前租户的公开内容项（租户隔离）
 // @Tags 公开接口
 // @Accept json
 // @Produce json
@@ -192,8 +215,17 @@ func (c *ContentController) DeleteContentItem(ctx *gin.Context) {
 // @Failure 500 {object} common.APIResponse "服务器错误"
 // @Router /api/public/content [get]
 func (c *ContentController) GetPublicContentItems(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	section := ctx.Query("section")
-	items, err := c.contentService.GetContentItems(section)
+	items, err := c.contentService.GetContentItemsByTenant(tenantID, section)
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return

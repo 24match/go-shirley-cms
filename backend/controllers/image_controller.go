@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 
 	"medical-device-cms/backend/common"
+	"medical-device-cms/backend/middleware"
 	"medical-device-cms/backend/services"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +26,7 @@ func NewImageController() *ImageController {
 
 // GetImages 获取图片列表
 // @Summary 获取图片列表
-// @Description 获取所有或指定分类的图片列表
+// @Description 获取当前租户指定分类的图片列表
 // @Tags 图片管理
 // @Accept json
 // @Produce json
@@ -34,8 +36,17 @@ func NewImageController() *ImageController {
 // @Security APIKey
 // @Router /api/admin/images [get]
 func (c *ImageController) GetImages(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	category := ctx.Query("category")
-	images, err := c.imageService.GetImages(category)
+	images, err := c.imageService.GetImagesByTenant(tenantID, category)
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return
@@ -45,7 +56,7 @@ func (c *ImageController) GetImages(ctx *gin.Context) {
 
 // UploadImage 上传单张图片
 // @Summary 上传单张图片
-// @Description 上传单张图片到服务器并记录到数据库
+// @Description 上传单张图片到服务器并记录到数据库（租户隔离）
 // @Tags 图片管理
 // @Accept multipart/form-data
 // @Produce json
@@ -59,6 +70,15 @@ func (c *ImageController) GetImages(ctx *gin.Context) {
 // @Security APIKey
 // @Router /api/admin/images [post]
 func (c *ImageController) UploadImage(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	file, err := ctx.FormFile("image")
 	if err != nil {
 		common.JSONBadRequest(ctx, "No file uploaded")
@@ -70,16 +90,18 @@ func (c *ImageController) UploadImage(ctx *gin.Context) {
 	sortOrder := 0
 	fmt.Sscanf(ctx.PostForm("sort_order"), "%d", &sortOrder)
 
-	os.MkdirAll("uploads", 0755)
+	// 按租户组织上传目录
+	uploadDir := fmt.Sprintf("uploads/%d", tenantID)
+	os.MkdirAll(uploadDir, 0755)
 	filename := fmt.Sprintf("%d_%s", os.Getpid(), file.Filename)
-	filepathStr := filepath.Join("uploads", filename)
+	filepathStr := filepath.Join(uploadDir, filename)
 
 	if err := ctx.SaveUploadedFile(file, filepathStr); err != nil {
 		common.JSONInternalServerError(ctx, "Could not save file")
 		return
 	}
 
-	image, err := c.imageService.UploadImage(filename, filepathStr, description, category, file.Size, sortOrder)
+	image, err := c.imageService.UploadImage(tenantID, filename, filepathStr, description, category, file.Size, sortOrder)
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return

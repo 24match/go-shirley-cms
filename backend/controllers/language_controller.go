@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"medical-device-cms/backend/common"
+	"medical-device-cms/backend/middleware"
 	"medical-device-cms/backend/services"
 )
 
@@ -19,8 +21,8 @@ func NewLanguageController() *LanguageController {
 }
 
 // GetPublicLanguageTexts 获取公开多语言文本
-// @Summary 获取公开多语言文本
-// @Description 获取指定模块或所有模块的公开多语言文本（无需认证）
+// @Summary 获取当前租户的公开多语言文本
+// @Description 获取当前租户指定模块或所有模块的公开多语言文本（租户隔离）
 // @Tags 公开接口
 // @Accept json
 // @Produce json
@@ -29,8 +31,17 @@ func NewLanguageController() *LanguageController {
 // @Failure 500 {object} common.APIResponse "服务器错误"
 // @Router /api/public/lang [get]
 func (c *LanguageController) GetPublicLanguageTexts(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	module := ctx.Query("module")
-	texts, err := c.languageService.GetPublicLanguageTextsByModule(module)
+	texts, err := c.languageService.GetPublicLanguageTextsByTenant(tenantID, module)
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return
@@ -39,8 +50,8 @@ func (c *LanguageController) GetPublicLanguageTexts(ctx *gin.Context) {
 }
 
 // GetLanguageTexts 获取多语言文本列表
-// @Summary 获取多语言文本列表
-// @Description 获取指定模块或所有模块的多语言文本列表
+// @Summary 获取当前租户的多语言文本列表
+// @Description 获取当前租户指定模块或所有模块的多语言文本列表
 // @Tags 多语言管理
 // @Accept json
 // @Produce json
@@ -50,8 +61,17 @@ func (c *LanguageController) GetPublicLanguageTexts(ctx *gin.Context) {
 // @Security APIKey
 // @Router /api/admin/lang [get]
 func (c *LanguageController) GetLanguageTexts(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	module := ctx.Query("module")
-	texts, err := c.languageService.GetLanguageTexts(module)
+	texts, err := c.languageService.GetLanguageTextsByTenant(tenantID, module)
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return
@@ -81,8 +101,8 @@ func (c *LanguageController) GetLanguageText(ctx *gin.Context) {
 }
 
 // CreateLanguageText 创建多语言文本
-// @Summary 创建多语言文本
-// @Description 创建新的多语言文本条目
+// @Summary 创建当前租户的多语言文本
+// @Description 创建当前租户的多语言文本条目（租户隔离）
 // @Tags 多语言管理
 // @Accept json
 // @Produce json
@@ -93,6 +113,15 @@ func (c *LanguageController) GetLanguageText(ctx *gin.Context) {
 // @Security APIKey
 // @Router /api/admin/lang [post]
 func (c *LanguageController) CreateLanguageText(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	var req CreateLanguageTextRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -100,7 +129,7 @@ func (c *LanguageController) CreateLanguageText(ctx *gin.Context) {
 		return
 	}
 
-	text, err := c.languageService.CreateLanguageText(req.Key, req.Module, req.EnText, req.ZhText, req.Description)
+	text, err := c.languageService.CreateLanguageTextByTenant(tenantID, req.Key, req.Module, req.EnText, req.ZhText, req.Description)
 	if err != nil {
 		common.JSONError(ctx, 409, common.ErrConflict, "Key already exists")
 		return

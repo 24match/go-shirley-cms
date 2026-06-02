@@ -24,8 +24,19 @@ func (s *ContentService) GetContentItems(section string) ([]models.ContentItem, 
 	return items, err
 }
 
-func (s *ContentService) CreateContentItem(section, title, description, imagePath string, sortOrder int, icon string, zhTitle, enTitle, zhDescription, enDescription string) (*models.ContentItem, error) {
+func (s *ContentService) GetContentItemsByTenant(tenantID uint, section string) ([]models.ContentItem, error) {
+	var items []models.ContentItem
+	query := config.DB.Where("tenant_id = ?", tenantID).Order("sort_order ASC")
+	if section != "" {
+		query = query.Where("section = ?", section)
+	}
+	err := query.Find(&items).Error
+	return items, err
+}
+
+func (s *ContentService) CreateContentItem(tenantID uint, section, title, description, imagePath string, sortOrder int, icon string, zhTitle, enTitle, zhDescription, enDescription string) (*models.ContentItem, error) {
 	item := models.ContentItem{
+		TenantID:      tenantID,
 		Section:       section,
 		Title:         title,
 		Description:   description,

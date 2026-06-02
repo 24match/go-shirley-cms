@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"encoding/json"
+	"net/http"
 	"strings"
 
 	"medical-device-cms/backend/common"
 	"medical-device-cms/backend/config"
+	"medical-device-cms/backend/middleware"
 	"medical-device-cms/backend/services"
 
 	"github.com/gin-gonic/gin"
@@ -102,8 +104,8 @@ func (c *ModuleController) GetPublicPageConfig(ctx *gin.Context) {
 }
 
 // GetModuleConfigs 获取模块配置列表
-// @Summary 获取模块配置列表
-// @Description 获取所有模块或指定模块的配置信息
+// @Summary 获取当前租户的模块配置列表
+// @Description 获取当前租户所有模块或指定模块的配置信息
 // @Tags 模块管理
 // @Accept json
 // @Produce json
@@ -113,8 +115,17 @@ func (c *ModuleController) GetPublicPageConfig(ctx *gin.Context) {
 // @Security APIKey
 // @Router /api/admin/modules [get]
 func (c *ModuleController) GetModuleConfigs(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	moduleName := ctx.Query("module")
-	configs, err := c.moduleService.GetModuleConfigs(moduleName)
+	configs, err := c.moduleService.GetModuleConfigsByTenant(tenantID, moduleName)
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return
@@ -123,8 +134,8 @@ func (c *ModuleController) GetModuleConfigs(ctx *gin.Context) {
 }
 
 // GetModuleConfig 获取单个模块配置
-// @Summary 获取单个模块配置
-// @Description 根据模块名称获取模块配置详情
+// @Summary 获取当前租户的单个模块配置
+// @Description 根据模块名称获取当前租户的模块配置详情
 // @Tags 模块管理
 // @Accept json
 // @Produce json
@@ -135,8 +146,17 @@ func (c *ModuleController) GetModuleConfigs(ctx *gin.Context) {
 // @Security APIKey
 // @Router /api/admin/modules/{name} [get]
 func (c *ModuleController) GetModuleConfig(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	name := ctx.Param("name")
-	config, err := c.moduleService.GetModuleConfig(name)
+	config, err := c.moduleService.GetModuleConfigsByTenant(tenantID, name)
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return
@@ -145,8 +165,8 @@ func (c *ModuleController) GetModuleConfig(ctx *gin.Context) {
 }
 
 // SaveModuleConfig 保存模块配置
-// @Summary 保存模块配置
-// @Description 创建或更新模块配置信息，支持表单和 JSON 格式
+// @Summary 保存当前租户的模块配置
+// @Description 创建或更新当前租户的模块配置信息，支持表单和 JSON 格式
 // @Tags 模块管理
 // @Accept json
 // @Produce json
@@ -158,6 +178,15 @@ func (c *ModuleController) GetModuleConfig(ctx *gin.Context) {
 // @Security APIKey
 // @Router /api/admin/modules/{name} [put]
 func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	moduleName := ctx.PostForm("moduleName")
 	if moduleName == "" {
 		var req struct {
@@ -278,7 +307,7 @@ func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
 		}
 	}
 
-	config, err := c.moduleService.SaveModuleConfig(moduleName, updates)
+	config, err := c.moduleService.SaveModuleConfigByTenant(tenantID, moduleName, updates)
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return
@@ -287,8 +316,8 @@ func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
 }
 
 // DeleteModuleConfig 删除模块配置
-// @Summary 删除模块配置
-// @Description 根据模块名称删除模块配置
+// @Summary 删除当前租户的模块配置
+// @Description 根据模块名称删除当前租户的模块配置
 // @Tags 模块管理
 // @Accept json
 // @Produce json
@@ -298,8 +327,18 @@ func (c *ModuleController) SaveModuleConfig(ctx *gin.Context) {
 // @Security APIKey
 // @Router /api/admin/modules/{name} [delete]
 func (c *ModuleController) DeleteModuleConfig(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	name := ctx.Param("name")
-	err := c.moduleService.DeleteModuleConfig(name)
+	// 需要添加租户过滤的删除方法
+	err := c.moduleService.DeleteModuleConfigByTenant(tenantID, name)
 	if err != nil {
 		common.JSONNotFound(ctx, "Module config not found")
 		return
@@ -308,8 +347,8 @@ func (c *ModuleController) DeleteModuleConfig(ctx *gin.Context) {
 }
 
 // DeleteModuleImage 删除模块图片
-// @Summary 删除模块图片
-// @Description 删除指定模块的关联图片
+// @Summary 删除当前租户的模块图片
+// @Description 删除当前租户指定模块的关联图片
 // @Tags 模块管理
 // @Accept json
 // @Produce json
@@ -319,8 +358,17 @@ func (c *ModuleController) DeleteModuleConfig(ctx *gin.Context) {
 // @Security APIKey
 // @Router /api/admin/modules/{name}/image [delete]
 func (c *ModuleController) DeleteModuleImage(ctx *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
 	moduleName := ctx.Param("name")
-	err := c.moduleService.DeleteModuleImage(moduleName)
+	err := c.moduleService.DeleteModuleImageByTenant(tenantID, moduleName)
 	if err != nil {
 		common.JSONNotFound(ctx, "Module image not found")
 		return
@@ -329,8 +377,8 @@ func (c *ModuleController) DeleteModuleImage(ctx *gin.Context) {
 }
 
 // GetPublicModuleConfigs 获取公开模块配置
-// @Summary 获取公开模块配置
-// @Description 获取所有模块的公开配置信息（无需认证）
+// @Summary 获取当前租户的公开模块配置
+// @Description 获取当前租户所有模块的公开配置信息（租户隔离）
 // @Tags 公开接口
 // @Accept json
 // @Produce json
@@ -338,7 +386,16 @@ func (c *ModuleController) DeleteModuleImage(ctx *gin.Context) {
 // @Failure 500 {object} common.APIResponse "服务器错误"
 // @Router /api/public/modules [get]
 func (c *ModuleController) GetPublicModuleConfigs(ctx *gin.Context) {
-	configs, err := c.moduleService.GetPublicModuleConfigs()
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
+	configs, err := c.moduleService.GetModuleConfigsByTenant(tenantID, "")
 	if err != nil {
 		common.JSONInternalServerError(ctx, err.Error())
 		return

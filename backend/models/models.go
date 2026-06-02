@@ -7,34 +7,106 @@ import (
 	"gorm.io/gorm"
 )
 
+// 租户状态常量
+const (
+	// TenantStatusActive 活跃状态
+	TenantStatusActive = "active"
+	// TenantStatusDisabled 禁用状态
+	TenantStatusDisabled = "disabled"
+	// TenantStatusPending 待激活状态
+	TenantStatusPending = "pending"
+	// TenantStatusSuspended 暂停状态
+	TenantStatusSuspended = "suspended"
+)
+
+// 订阅计划常量
+const (
+	// SubscriptionPlanFree 免费版
+	SubscriptionPlanFree = "free"
+	// SubscriptionPlanPro 专业版
+	SubscriptionPlanPro = "pro"
+	// SubscriptionPlanEnterprise 企业版
+	SubscriptionPlanEnterprise = "enterprise"
+)
+
+// Tenant 租户模型
+// @Description SaaS 系统中的租户（多租户）信息，每个租户拥有独立的数据空间
+type Tenant struct {
+	// GORM 自动管理的 ID
+	gorm.Model
+	// 租户代码（唯一标识符，用于域名和路径识别）
+	TenantCode string `gorm:"uniqueIndex;not null" json:"tenant_code" example:"acme-corp"`
+	// 租户名称（显示名称）
+	Name string `gorm:"not null" json:"name" example:"Acme Corporation"`
+	// 租户状态（active/disabled/pending/suspended）
+	Status string `gorm:"default:'active'" json:"status" example:"active"`
+	// 子域名（用于租户访问）
+	SubDomain string `gorm:"index" json:"sub_domain" example:"acme"`
+	// 自定义域名
+	CustomDomain string `gorm:"index" json:"custom_domain" example:"www.acme.com"`
+	// 订阅计划（free/pro/enterprise）
+	SubscriptionPlan string `gorm:"default:'free'" json:"subscription_plan" example:"free"`
+	// 订阅过期时间
+	SubscriptionExpiresAt *time.Time `json:"subscription_expires_at,omitempty" example:"2025-12-31T23:59:59Z"`
+}
+
+// AuditLog 审计日志模型
+// @Description 记录系统关键操作日志，用于审计和追踪
+type AuditLog struct {
+	// GORM 自动管理的 ID
+	gorm.Model
+	// 操作人用户 ID
+	OperatorID uint `gorm:"not null" json:"operator_id" example:"1"`
+	// 租户 ID
+	TenantID uint `gorm:"index;not null" json:"tenant_id" example:"1"`
+	// 操作类型（CREATE/UPDATE/DELETE/LOGIN/LOGOUT 等）
+	Action string `gorm:"not null" json:"action" example:"CREATE"`
+	// 资源类型（User/Image/ModuleConfig 等）
+	ResourceType string `json:"resource_type" example:"Image"`
+	// 资源 ID
+	ResourceID uint `json:"resource_id" example:"123"`
+	// 操作前的值（JSON 格式）
+	BeforeValue string `gorm:"type:text" json:"before_value,omitempty"`
+	// 操作后的值（JSON 格式）
+	AfterValue string `gorm:"type:text" json:"after_value,omitempty"`
+}
+
 // Claims JWT Token 声明结构
-// @Description 用于 JWT 认证的用户声明信息，包含用户 ID、角色和标准声明
+// @Description 用于 JWT 认证的用户声明信息，包含用户 ID、角色、租户信息和标准声明
 type Claims struct {
 	// 用户 ID
 	UserID uint `json:"user_id" example:"1"`
-	// 用户角色（admin 或 user）
+	// 用户角色（superadmin/tenant_admin/user）
 	Role string `json:"role" example:"admin"`
+	// 租户 ID（超级管理员时为 0）
+	TenantID uint `json:"tenant_id,omitempty" example:"1"`
+	// 租户代码（超级管理员时为空）
+	TenantCode string `json:"tenant_code,omitempty" example:"acme-corp"`
 	jwt.RegisteredClaims
 }
 
 // User 用户模型
-// @Description 系统用户信息，用于后台管理认证
+// @Description 系统用户信息，用于后台管理认证，支持多租户
 type User struct {
 	// GORM 自动管理的 ID
 	gorm.Model
+	// 租户 ID（超级管理员时为 0）
+	TenantID uint `gorm:"index;default:0" json:"tenant_id" example:"1"`
 	// 用户名（唯一）
 	Username string `gorm:"uniqueIndex;not null" json:"username" example:"admin"`
 	// 密码（加密存储）
 	Password string `gorm:"not null" json:"password" example:"***"`
-	// 用户角色
-	Role string `gorm:"default:'admin'" json:"role" example:"admin"`
+	// 用户角色（superadmin/tenant_admin/user）
+	Role string `gorm:"default:'tenant_admin'" json:"role" example:"tenant_admin"`
 }
 
 // Image 图片模型
-// @Description 系统上传的图片资源信息
+// @Description 系统上传的图片资源信息，支持多租户隔离
 type Image struct {
 	// 图片 ID
 	ID uint `gorm:"primaryKey" json:"id" example:"1"`
+	// 租户 ID
+	TenantID uint `gorm:"index;not null" json:"tenant_id" example:"1"`
 	// 创建时间
 	CreatedAt time.Time `json:"createdAt" example:"2024-01-01T00:00:00Z"`
 	// 更新时间
@@ -58,10 +130,12 @@ type Image struct {
 }
 
 // PageConfig 页面配置模型
-// @Description 存储各页面的配置数据
+// @Description 存储各页面的配置数据，支持多租户隔离
 type PageConfig struct {
 	// GORM 自动管理的 ID
 	gorm.Model
+	// 租户 ID
+	TenantID uint `gorm:"index;not null" json:"tenant_id" example:"1"`
 	// 页面名称（唯一）
 	PageName string `gorm:"uniqueIndex;not null" json:"pageName" example:"home"`
 	// 配置数据（JSON 格式）
@@ -69,10 +143,12 @@ type PageConfig struct {
 }
 
 // ModuleConfig 模块配置模型
-// @Description 存储各功能模块的配置信息，支持多语言
+// @Description 存储各功能模块的配置信息，支持多语言和多租户隔离
 type ModuleConfig struct {
 	// GORM 自动管理的 ID
 	gorm.Model
+	// 租户 ID
+	TenantID uint `gorm:"index;not null" json:"tenant_id" example:"1"`
 	// 模块名称（唯一）
 	ModuleName string `gorm:"uniqueIndex;not null" json:"moduleName" example:"banner"`
 	// 是否启用
@@ -110,10 +186,12 @@ type ModuleConfig struct {
 }
 
 // ContentItem 内容项模型
-// @Description 存储页面内容项，支持多语言和图标
+// @Description 存储页面内容项，支持多语言和图标，支持多租户隔离
 type ContentItem struct {
 	// GORM 自动管理的 ID
 	gorm.Model
+	// 租户 ID
+	TenantID uint `gorm:"index;not null" json:"tenant_id" example:"1"`
 	// 所属区域/板块
 	Section string `gorm:"not null" json:"section" example:"advantages"`
 	// 中文标题
@@ -137,10 +215,12 @@ type ContentItem struct {
 }
 
 // LanguageText 多语言文本模型
-// @Description 存储系统多语言文本，支持版本管理
+// @Description 存储系统多语言文本，支持版本管理和多租户隔离
 type LanguageText struct {
 	// GORM 自动管理的 ID
 	gorm.Model
+	// 租户 ID
+	TenantID uint `gorm:"index;not null" json:"tenant_id" example:"1"`
 	// 文本键（唯一）
 	Key string `gorm:"uniqueIndex;not null" json:"key" example:"home.welcome"`
 	// 所属模块
@@ -156,10 +236,12 @@ type LanguageText struct {
 }
 
 // LanguageTextVersion 多语言版本文本模型
-// @Description 存储多语言文本的历史版本，用于版本回溯
+// @Description 存储多语言文本的历史版本，用于版本回溯，支持多租户隔离
 type LanguageTextVersion struct {
 	// GORM 自动管理的 ID
 	gorm.Model
+	// 租户 ID
+	TenantID uint `gorm:"index;not null" json:"tenant_id" example:"1"`
 	// 关联的 LanguageText ID
 	LanguageTextID uint `gorm:"not null" json:"languageTextId" example:"1"`
 	// 文本键
@@ -179,10 +261,12 @@ type LanguageTextVersion struct {
 }
 
 // SiteSetting 站点设置模型
-// @Description 存储站点配置项，键值对形式
+// @Description 存储站点配置项，键值对形式，支持多租户隔离
 type SiteSetting struct {
 	// GORM 自动管理的 ID
 	gorm.Model
+	// 租户 ID
+	TenantID uint `gorm:"index;not null" json:"tenant_id" example:"1"`
 	// 设置键（唯一）
 	Key string `gorm:"uniqueIndex;not null" json:"key" example:"site.name"`
 	// 设置值
@@ -190,10 +274,12 @@ type SiteSetting struct {
 }
 
 // ContactSubmission 联系表单提交模型
-// @Description 存储用户通过联系我们表单提交的数据
+// @Description 存储用户通过联系我们表单提交的数据，支持多租户隔离
 type ContactSubmission struct {
 	// GORM 自动管理的 ID
 	gorm.Model
+	// 租户 ID
+	TenantID uint `gorm:"index;not null" json:"tenant_id" example:"1"`
 	// 提交人姓名
 	Name string `gorm:"not null" json:"name" example:"John Doe"`
 	// 提交人邮箱

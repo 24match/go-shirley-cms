@@ -37,9 +37,41 @@ func (s *LanguageService) GetPublicLanguageTextsByModule(module string) (map[str
 	return result, nil
 }
 
+func (s *LanguageService) GetPublicLanguageTextsByTenant(tenantID uint, module string) (map[string]map[string]string, error) {
+	var texts []models.LanguageText
+	query := config.DB.Where("tenant_id = ?", tenantID)
+	if module != "" {
+		query = query.Where("module = ?", module)
+	}
+	if err := query.Find(&texts).Error; err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]map[string]string)
+	result["en"] = make(map[string]string)
+	result["zh"] = make(map[string]string)
+
+	for _, text := range texts {
+		result["en"][text.Key] = text.EnText
+		result["zh"][text.Key] = text.ZhText
+	}
+
+	return result, nil
+}
+
 func (s *LanguageService) GetLanguageTexts(module string) ([]models.LanguageText, error) {
 	var texts []models.LanguageText
 	query := config.DB
+	if module != "" {
+		query = query.Where("module = ?", module)
+	}
+	err := query.Find(&texts).Error
+	return texts, err
+}
+
+func (s *LanguageService) GetLanguageTextsByTenant(tenantID uint, module string) ([]models.LanguageText, error) {
+	var texts []models.LanguageText
+	query := config.DB.Where("tenant_id = ?", tenantID)
 	if module != "" {
 		query = query.Where("module = ?", module)
 	}
@@ -60,6 +92,26 @@ func (s *LanguageService) CreateLanguageText(key, module, enText, zhText, descri
 	}
 
 	text := models.LanguageText{
+		Key:         key,
+		Module:      module,
+		EnText:      enText,
+		ZhText:      zhText,
+		Description: description,
+		Version:     1,
+	}
+
+	err := config.DB.Create(&text).Error
+	return &text, err
+}
+
+func (s *LanguageService) CreateLanguageTextByTenant(tenantID uint, key, module, enText, zhText, description string) (*models.LanguageText, error) {
+	var existing models.LanguageText
+	if err := config.DB.Where("tenant_id = ? AND key = ?", tenantID, key).First(&existing).Error; err == nil {
+		return nil, nil
+	}
+
+	text := models.LanguageText{
+		TenantID:    tenantID,
 		Key:         key,
 		Module:      module,
 		EnText:      enText,

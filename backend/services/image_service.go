@@ -32,10 +32,21 @@ func (s *ImageService) GetImages(category string) ([]models.Image, error) {
 	return images, err
 }
 
-func (s *ImageService) UploadImage(filename, filepathStr, description, category string, fileSize int64, sortOrder int) (*models.Image, error) {
+func (s *ImageService) GetImagesByTenant(tenantID uint, category string) ([]models.Image, error) {
+	var images []models.Image
+	query := config.DB.Where("tenant_id = ?", tenantID).Order("created_at DESC")
+	if category != "" {
+		query = query.Where("category = ?", category)
+	}
+	err := query.Find(&images).Error
+	return images, err
+}
+
+func (s *ImageService) UploadImage(tenantID uint, filename, filepathStr, description, category string, fileSize int64, sortOrder int) (*models.Image, error) {
 	os.MkdirAll("uploads", 0755)
 
 	image := models.Image{
+		TenantID:    tenantID,
 		Filename:    filename,
 		FilePath:    filepathStr,
 		FileSize:    fileSize,

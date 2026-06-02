@@ -217,3 +217,32 @@ func (s *ModuleService) GetPublicModuleConfigs() ([]map[string]interface{}, erro
 	}
 	return results, nil
 }
+
+func (s *ModuleService) DeleteModuleConfigByTenant(tenantID uint, name string) error {
+	var moduleConfig models.ModuleConfig
+	if err := config.DB.Where("tenant_id = ? AND module_name = ?", tenantID, name).First(&moduleConfig).Error; err != nil {
+		return err
+	}
+
+	if moduleConfig.ImagePath != "" {
+		os.Remove("./uploads/" + strconv.Itoa(int(tenantID)) + "/" + moduleConfig.ImagePath)
+	}
+
+	return config.DB.Delete(&moduleConfig).Error
+}
+
+func (s *ModuleService) DeleteModuleImageByTenant(tenantID uint, name string) error {
+	var moduleConfig models.ModuleConfig
+	if err := config.DB.Where("tenant_id = ? AND module_name = ?", tenantID, name).First(&moduleConfig).Error; err != nil {
+		return err
+	}
+
+	if moduleConfig.ImagePath == "" {
+		return nil
+	}
+
+	os.Remove("./uploads/" + strconv.Itoa(int(tenantID)) + "/" + moduleConfig.ImagePath)
+
+	moduleConfig.ImagePath = ""
+	return config.DB.Save(&moduleConfig).Error
+}
