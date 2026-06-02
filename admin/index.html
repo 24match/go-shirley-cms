@@ -155,14 +155,55 @@
                             <div class="form-group"><label>电话</label><input type="text" id="contactPhone" placeholder="输入联系电话"></div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label>WhatsApp</label><input type="text" id="contactWhatsApp" placeholder="输入WhatsApp号码"></div>
+                            <div class="form-group"><label>WhatsApp</label><input type="text" id="contactWhatsApp" placeholder="输入 WhatsApp 号码"></div>
                             <div class="form-group"><label>地址</label><input type="text" id="contactAddress" placeholder="输入公司地址"></div>
                         </div>
                         <button class="btn btn-primary" onclick="saveContactConfig()">保存配置</button>
                     </div>
+                    
+                    <!-- 联系表单提交数据 -->
+                    <div class="module-card" style="margin-top: 20px;">
+                        <div class="module-card-header">
+                            <h3>📋 联系表单提交记录</h3>
+                            <button class="btn btn-secondary" onclick="loadContactSubmissions()">🔄 刷新</button>
+                        </div>
+                        <div style="padding: 20px 0;">
+                            <div id="contactSubmissionsList">
+                                <div style="text-align:center;color:#999;padding:50px;">
+                                    <div style="font-size:48px;margin-bottom:15px;">📬</div>
+                                    <p>暂无提交记录</p>
+                                </div>
+                            </div>
+                            <!-- 分页控件 -->
+                            <div id="contactSubmissionsPagination" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid #f0f0f0;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;">
+                                    <div style="color:#666;">
+                                        共 <strong id="contactSubmissionsTotal">0</strong> 条记录，
+                                        第 <strong id="contactSubmissionsCurrentPage">1</strong> 页，
+                                        共 <strong id="contactSubmissionsTotalPage">1</strong> 页
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-secondary" id="contactPrevBtn" onclick="changeContactSubmissionsPage(-1)" disabled>上一页</button>
+                                        <button class="btn btn-secondary" id="contactNextBtn" onclick="changeContactSubmissionsPage(1)">下一页</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="systemSection" class="section">
+                    <div class="module-card">
+                        <div class="module-card-header"><h3>🌐 网站标题配置</h3></div>
+                        <div class="bilingual-group"><label>网站标题（显示在浏览器标签页）</label><div class="bilingual-inputs"><div class="lang-input"><span class="lang-label cn">🇨🇳 中文</span><input type="text" id="zhSiteTitle" placeholder="输入中文网站标题"></div><div class="lang-input"><span class="lang-label en">🇬🇧 英文</span><input type="text" id="enSiteTitle" placeholder="输入英文网站标题"></div></div></div>
+                        <button class="btn btn-primary" onclick="saveSiteSettings()">保存网站标题</button>
+                    </div>
+                    <div class="module-card">
+                        <div class="module-card-header"><h3>🏷️ 网站 Logo 配置</h3></div>
+                        <div class="bilingual-group"><label>Logo 名称（显示在页面左上角和页脚）</label><div class="bilingual-inputs"><div class="lang-input"><span class="lang-label cn">🇨🇳 中文 Logo</span><input type="text" id="zhSiteLogo" placeholder="例如：医疗"></div><div class="lang-input"><span class="lang-label en">🇬🇧 英文 Logo</span><input type="text" id="enSiteLogo" placeholder="例如：MEDICAL"></div></div></div>
+                        <div class="form-group" style="margin-top:15px;"><label>Logo 后缀颜色</label><input type="color" id="siteLogoColor" style="height:45px;padding:5px;width:100px;"></div>
+                        <button class="btn btn-primary" onclick="saveSiteSettings()">保存 Logo 配置</button>
+                    </div>
                     <div class="module-card">
                         <div class="module-card-header"><h3>🏷️ 品牌配置</h3></div>
                         <div class="form-row">

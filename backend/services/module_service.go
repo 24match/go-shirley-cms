@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -72,6 +73,13 @@ func mergeExtraData(mc *models.ModuleConfig) map[string]interface{} {
 			for k, v := range extra {
 				result[k] = v
 			}
+			// 开发环境日志：记录 contact 模块的 extraData 解析
+			if mc.ModuleName == "contact" {
+				log.Printf("[ModuleService] Contact module extraData parsed: email=%v, phone=%v, whatsapp=%v, address=%v",
+					extra["email"], extra["phone"], extra["whatsapp"], extra["address"])
+			}
+		} else {
+			log.Printf("[ModuleService] Failed to parse extraData for module %s: %v", mc.ModuleName, err)
 		}
 	}
 

@@ -5,8 +5,12 @@ import (
 	"medical-device-cms/backend/middleware"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// RegisterRoutes 注册所有路由
+// @description 初始化 CORS、错误处理中间件，注册静态文件路由、API 路由和 Swagger 文档路由
 func RegisterRoutes(r *gin.Engine) {
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.ErrorHandler())
@@ -16,6 +20,10 @@ func RegisterRoutes(r *gin.Engine) {
 	r.StaticFile("/", "./inde.html")
 	r.StaticFile("/i18n.js", "./i18n.js")
 	r.Static("/admin", "./admin")
+
+	// 注册 Swagger UI 路由（仅开发环境）
+	// @description 访问 /swagger/index.html 查看交互式 API 文档
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	api := r.Group("/api")
 	registerPublicRoutes(api)
@@ -29,6 +37,10 @@ func registerPublicRoutes(api *gin.RouterGroup) {
 	api.GET("/public/images", controllers.NewImageController().GetImages)
 	api.GET("/public/content", controllers.NewContentController().GetPublicContentItems)
 	api.GET("/public/lang", controllers.NewLanguageController().GetPublicLanguageTexts)
+	api.GET("/public/site-settings", controllers.NewSiteSettingController().GetPublicSettings)
+	
+	// 联系表单提交（公开接口）
+	api.POST("/contact/submit", controllers.NewContactSubmissionController().SubmitContactForm)
 }
 
 func registerAdminRoutes(api *gin.RouterGroup) {
@@ -64,4 +76,11 @@ func registerAdminRoutes(api *gin.RouterGroup) {
 	admin.DELETE("/lang/:id", controllers.NewLanguageController().DeleteLanguageText)
 	admin.GET("/lang/:id/versions", controllers.NewLanguageController().GetLanguageTextVersions)
 	admin.POST("/lang/:id/restore/:version", controllers.NewLanguageController().RestoreLanguageTextVersion)
+
+	admin.GET("/site-settings", controllers.NewSiteSettingController().GetSettings)
+	admin.POST("/site-settings", controllers.NewSiteSettingController().SaveSettings)
+	
+	// 联系表单提交管理
+	admin.GET("/contact-submissions", controllers.NewContactSubmissionController().GetContactSubmissions)
+	admin.DELETE("/contact-submissions/:id", controllers.NewContactSubmissionController().DeleteContactSubmission)
 }

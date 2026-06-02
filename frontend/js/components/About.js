@@ -43,10 +43,14 @@ export function loadAboutContent() {
     if (imgEl) {
         if (aboutModule.imagePath) {
             imgEl.src = `/uploads/${aboutModule.imagePath}`;
+            imgEl.removeAttribute('data-src');
+            imgEl.classList.remove('lazy');
         } else {
             const aboutImg = images.find(i => i.category === 'about');
             if (aboutImg) {
                 imgEl.src = `/uploads/${aboutImg.filename}`;
+                imgEl.removeAttribute('data-src');
+                imgEl.classList.remove('lazy');
             }
         }
     }

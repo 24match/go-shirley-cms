@@ -1,5 +1,5 @@
 import { initI18n } from './utils/i18n.js';
-import { initHeader } from './components/Header.js';
+import { initHeader, loadSiteLogo } from './components/Header.js';
 import { loadBannerContent } from './components/Banner.js';
 import { loadAboutContent } from './components/About.js';
 import { loadStatsContent } from './components/Stats.js';
@@ -14,15 +14,18 @@ import { waitForContentReady } from './utils/loadingManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initI18n();
-    initHeader();
+    initHeader(); // 初始化语言切换器和菜单
     
     loadCMSData().then(() => {
+        // 数据加载完成后，加载 Logo 和其他内容
+        loadSiteLogo();
         applyCMSContent();
         
         const originalSetLang = window.setLang;
         window.setLang = function(lang) {
             originalSetLang(lang);
             applyCMSContent();
+            loadSiteLogo(); // 切换语言时更新 Logo
         };
         
         return waitForContentReady();

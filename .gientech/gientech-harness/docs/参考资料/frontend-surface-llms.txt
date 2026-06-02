@@ -1,0 +1,31 @@
+Title: 前端与交互层参考
+
+Purpose:
+- 整理前端入口、页面组织、组件区域与构建线索，帮助 Agent 快速定位可见功能边界。
+- 这是一份仓库内参考笔记，用于帮助 LLM / Agent 快速定位真实实现入口，而不是替代外部官方文档。
+
+Repository Evidence:
+- frontend/components
+- frontend/css
+- frontend/css/about.css
+- frontend/css/advantage.css
+- frontend/css/banner.css
+- frontend/css/contact.css
+- frontend/css/events.css
+- frontend/css/factory.css
+
+Current Repo Signals:
+- Project: lihui
+- Tech stack: 待继续识别
+- Capability clues: 多目录模块化组织, 存在独立交互层或前端入口, 配置密钥与安全边界治理
+
+How To Use:
+- 先从上面的路径核对真实实现、配置与入口文件。
+- 遇到跨模块问题时，优先回到架构文档与相关专项文档确认边界。
+- 如果 evidence 中的路径发生迁移，应先更新这份参考文件再继续扩展文档链路。
+
+Related Harness Docs:
+- [架构总览](../../架构总览.md)
+- [产品与用户价值](../产品与用户价值.md)
+- [可靠性说明](../可靠性说明.md)
+- [安全说明](../安全说明.md)

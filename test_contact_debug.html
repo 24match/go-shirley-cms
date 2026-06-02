@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact 模块调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-info { background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        pre { background: #333; color: #fff; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Contact 模块调试工具</h1>
+    
+    <div id="debug"></div>
+    
+    <h2>实际显示效果：</h2>
+    <div class="contact-wrap">
+        <div class="contact-info">
+            <h3>Get In Touch</h3>
+            <p><span class="contact-icon">📧</span><span id="contactEmail"><strong>Email:</strong><br>contact@medicaldevice.com</span></p>
+            <p><span class="contact-icon">💬</span><span id="contactWhatsApp"><strong>WhatsApp:</strong><br>+86 138 0000 0000</span></p>
+            <p><span class="contact-icon">📞</span><span id="contactPhone"><strong>Tel:</strong><br>+86 138 0000 0000</span></p>
+            <p><span class="contact-icon">📍</span><span id="contactAddress"><strong>Address:</strong><br>Industrial Park, Guangdong, China</span></p>
+        </div>
+    </div>
+
+    <script type="module">
+        const debugDiv = document.getElementById('debug');
+        
+        async function testContactModule() {
+            let html = '<div class="debug-info">';
+            
+            try {
+                // 1. 测试 API 调用
+                html += '<h3>1. 测试 API 数据</h3>';
+                const response = await fetch('/api/public/modules');
+                const data = await response.json();
+                
+                const contactModule = data.data.find(m => m.moduleName === 'contact');
+                
+                if (!contactModule) {
+                    html += '<p class="error">❌ Contact 模块不存在</p>';
+                } else {
+                    html += '<p class="success">✅ Contact 模块存在</p>';
+                    html += '<p><strong>Enabled:</strong> ' + (contactModule.enabled ? 'true' : 'false') + '</p>';
+                    html += '<p><strong>ExtraData:</strong></p><pre>' + JSON.stringify(contactModule.extraData, null, 2) + '</pre>';
+                    html += '<p><strong>Email (merged):</strong> ' + (contactModule.email || '未设置') + '</p>';
+                    html += '<p><strong>Phone (merged):</strong> ' + (contactModule.phone || '未设置') + '</p>';
+                    html += '<p><strong>WhatsApp (merged):</strong> ' + (contactModule.whatsapp || '未设置') + '</p>';
+                    html += '<p><strong>Address (merged):</strong> ' + (contactModule.address || '未设置') + '</p>';
+                    
+                    // 2. 测试前端更新逻辑
+                    html += '<h3>2. 测试前端更新逻辑</h3>';
+                    
+                    if (contactModule.enabled !== false) {
+                        let contactData = {};
+                        
+                        // 方式 1：后端 mergeExtraData 已经解析出来的字段
+                        if (contactModule.email) contactData.email = contactModule.email;
+                        if (contactModule.phone) contactData.phone = contactModule.phone;
+                        if (contactModule.whatsapp) contactData.whatsapp = contactModule.whatsapp;
+                        if (contactModule.address) contactData.address = contactModule.address;
+                        
+                        // 方式 2：从 extraData JSON 字符串中解析
+                        if (contactModule.extraData) {
+                            try {
+                                const extraData = JSON.parse(contactModule.extraData);
+                                if (extraData.email && !contactData.email) contactData.email = extraData.email;
+                                if (extraData.phone && !contactData.phone) contactData.phone = extraData.phone;
+                                if (extraData.whatsapp && !contactData.whatsapp) contactData.whatsapp = extraData.whatsapp;
+                                if (extraData.address && !contactData.address) contactData.address = extraData.address;
+                            } catch (e) {
+                                html += '<p class="error">❌ extraData 解析失败：' + e.message + '</p>';
+                            }
+                        }
+                        
+                        html += '<p><strong>解析后的联系数据：</strong></p>';
+                        html += '<ul>';
+                        html += '<li>Email: ' + (contactData.email || '❌ 未设置') + '</li>';
+                        html += '<li>Phone: ' + (contactData.phone || '❌ 未设置') + '</li>';
+                        html += '<li>WhatsApp: ' + (contactData.whatsapp || '❌ 未设置') + '</li>';
+                        html += '<li>Address: ' + (contactData.address || '❌ 未设置') + '</li>';
+                        html += '</ul>';
+                        
+                        // 3. 检查 DOM 元素
+                        html += '<h3>3. 检查 DOM 元素</h3>';
+                        const emailEl = document.getElementById('contactEmail');
+                        const phoneEl = document.getElementById('contactPhone');
+                        const whatsappEl = document.getElementById('contactWhatsApp');
+                        const addressEl = document.getElementById('contactAddress');
+                        
+                        html += '<p>contactEmail 元素：' + (emailEl ? '✅ 存在' : '❌ 不存在') + '</p>';
+                        html += '<p>contactPhone 元素：' + (phoneEl ? '✅ 存在' : '❌ 不存在') + '</p>';
+                        html += '<p>contactWhatsApp 元素：' + (whatsappEl ? '✅ 存在' : '❌ 不存在') + '</p>';
+                        html += '<p>contactAddress 元素：' + (addressEl ? '✅ 存在' : '❌ 不存在') + '</p>';
+                        
+                        // 4. 执行更新
+                        html += '<h3>4. 执行更新操作</h3>';
+                        if (emailEl && contactData.email) {
+                            emailEl.innerHTML = '<strong>Email:</strong><br>' + contactData.email;
+                            html += '<p class="success">✅ Email 已更新</p>';
+                        } else {
+                            html += '<p class="warning">⚠️ Email 未更新（元素不存在或数据为空）</p>';
+                        }
+                        
+                        if (phoneEl && contactData.phone) {
+                            phoneEl.innerHTML = '<strong>Tel:</strong><br>' + contactData.phone;
+                            html += '<p class="success">✅ Phone 已更新</p>';
+                        } else {
+                            html += '<p class="warning">⚠️ Phone 未更新（元素不存在或数据为空）</p>';
+                        }
+                        
+                        if (whatsappEl && contactData.whatsapp) {
+                            whatsappEl.innerHTML = '<strong>WhatsApp:</strong><br>' + contactData.whatsapp;
+                            html += '<p class="success">✅ WhatsApp 已更新</p>';
+                        } else {
+                            html += '<p class="warning">⚠️ WhatsApp 未更新（元素不存在或数据为空）</p>';
+                        }
+                        
+                        if (addressEl && contactData.address) {
+                            addressEl.innerHTML = '<strong>Address:</strong><br>' + contactData.address;
+                            html += '<p class="success">✅ Address 已更新</p>';
+                        } else {
+                            html += '<p class="warning">⚠️ Address 未更新（元素不存在或数据为空）</p>';
+                        }
+                    } else {
+                        html += '<p class="error">❌ Contact 模块未启用</p>';
+                    }
+                }
+            } catch (e) {
+                html += '<p class="error">❌ 测试失败：' + e.message + '</p>';
+            }
+            
+            html += '</div>';
+            debugDiv.innerHTML = html;
+        }
+        
+        // 页面加载时执行测试
+        testContactModule();
+    </script>
+</body>
+</html>

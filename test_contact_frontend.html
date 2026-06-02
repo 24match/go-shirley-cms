@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Module Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        h2 { color: #333; }
+        .contact-info { margin: 10px 0; }
+        .contact-info strong { color: #0066cc; }
+    </style>
+</head>
+<body>
+    <h1>Contact 模块测试</h1>
+    
+    <div id="testResults"></div>
+    
+    <h2>前台显示的联系方式：</h2>
+    <div id="contactDisplay">
+        <div id="contactEmail"></div>
+        <div id="contactPhone"></div>
+        <div id="contactWhatsApp"></div>
+        <div id="contactAddress"></div>
+    </div>
+
+    <script type="module">
+        // 模拟 getCMSData
+        let cmsData = { modules: {} };
+        
+        async function loadCMSData() {
+            try {
+                const modulesRes = await fetch('/api/public/modules');
+                const modulesData = await modulesRes.json();
+                
+                cmsData.modules = {};
+                const modulesArray = Array.isArray(modulesData.data) ? modulesData.data : (Array.isArray(modulesData) ? modulesData : []);
+                modulesArray.forEach(m => { 
+                    cmsData.modules[m.moduleName] = m; 
+                });
+                
+                displayResults('CMS 数据加载成功', cmsData.modules['contact']);
+                loadContactContent();
+            } catch(e) {
+                displayResults('CMS 数据加载失败：' + e.message, null, true);
+            }
+        }
+        
+        function displayResults(title, contactModule, isError = false) {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.className = 'test-result ' + (isError ? 'error' : 'success');
+            resultsDiv.innerHTML = '<h3>' + title + '</h3>';
+            
+            if (contactModule) {
+                resultsDiv.innerHTML += '<p><strong>模块状态：</strong>' + (contactModule.enabled !== false ? '✅ 已启用' : '❌ 未启用') + '</p>';
+                resultsDiv.innerHTML += '<p><strong>ExtraData：</strong></p><pre>' + JSON.stringify(contactModule.extraData, null, 2) + '</pre>';
+                resultsDiv.innerHTML += '<p><strong>解析后的字段：</strong></p><ul>';
+                if (contactModule.email) resultsDiv.innerHTML += '<li>📧 Email: ' + contactModule.email + '</li>';
+                if (contactModule.phone) resultsDiv.innerHTML += '<li>📞 Phone: ' + contactModule.phone + '</li>';
+                if (contactModule.whatsapp) resultsDiv.innerHTML += '<li>💬 WhatsApp: ' + contactModule.whatsapp + '</li>';
+                if (contactModule.address) resultsDiv.innerHTML += '<li>📍 Address: ' + contactModule.address + '</li>';
+                resultsDiv.innerHTML += '</ul>';
+            }
+        }
+        
+        function loadContactContent() {
+            const { modules } = cmsData;
+            const contactModule = modules['contact'];
+            
+            if (contactModule && contactModule.enabled !== false) {
+                let contactData = {};
+                
+                // 方式 1：后端 mergeExtraData 已经解析出来的字段
+                if (contactModule.email) contactData.email = contactModule.email;
+                if (contactModule.phone) contactData.phone = contactModule.phone;
+                if (contactModule.whatsapp) contactData.whatsapp = contactModule.whatsapp;
+                if (contactModule.address) contactData.address = contactModule.address;
+                
+                // 方式 2：从 extraData JSON 字符串中解析
+                if (contactModule.extraData) {
+                    try {
+                        const extraData = JSON.parse(contactModule.extraData);
+                        if (extraData.email && !contactData.email) contactData.email = extraData.email;
+                        if (extraData.phone && !contactData.phone) contactData.phone = extraData.phone;
+                        if (extraData.whatsapp && !contactData.whatsapp) contactData.whatsapp = extraData.whatsapp;
+                        if (extraData.address && !contactData.address) contactData.address = extraData.address;
+                    } catch (e) {
+                        console.log('解析 extraData 失败:', e);
+                    }
+                }
+                
+                const emailEl = document.getElementById('contactEmail');
+                const phoneEl = document.getElementById('contactPhone');
+                const whatsappEl = document.getElementById('contactWhatsApp');
+                const addressEl = document.getElementById('contactAddress');
+
+                if (emailEl && contactData.email) {
+                    emailEl.innerHTML = '<strong>Email:</strong><br>' + contactData.email;
+                    emailEl.className = 'contact-info';
+                }
+                if (phoneEl && contactData.phone) {
+                    phoneEl.innerHTML = '<strong>Tel:</strong><br>' + contactData.phone;
+                    phoneEl.className = 'contact-info';
+                }
+                if (whatsappEl && contactData.whatsapp) {
+                    whatsappEl.innerHTML = '<strong>WhatsApp:</strong><br>' + contactData.whatsapp;
+                    whatsappEl.className = 'contact-info';
+                }
+                if (addressEl && contactData.address) {
+                    addressEl.innerHTML = '<strong>Address:</strong><br>' + contactData.address;
+                    addressEl.className = 'contact-info';
+                }
+            }
+        }
+        
+        // 页面加载时执行
+        loadCMSData();
+    </script>
+</body>
+</html>

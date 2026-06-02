@@ -1,0 +1,1613 @@
+basePath: /api
+definitions:
+  common.APIResponse:
+    description: 所有 API 响应的统一包装格式，包含状态码、消息、数据和 timestamp
+    properties:
+      code:
+        description: 状态码，200 表示成功，其他表示错误
+        example: 200
+        type: integer
+      data:
+        description: 响应数据，成功时返回业务数据，错误时为 null
+      message:
+        description: 消息提示，成功时为"success"，错误时为错误描述
+        example: success
+        type: string
+      timestamp:
+        description: Unix 时间戳（秒）
+        example: 1717200000
+        type: integer
+    type: object
+  controllers.CreateLanguageTextRequest:
+    description: 创建多语言文本的请求参数
+    properties:
+      description:
+        description: 描述说明
+        example: 首页欢迎语
+        type: string
+      enText:
+        description: 英文文本
+        example: Welcome
+        type: string
+      key:
+        description: 文本键（唯一）
+        example: home.welcome
+        type: string
+      module:
+        description: 所属模块
+        example: home
+        type: string
+      zhText:
+        description: 中文文本
+        example: 欢迎
+        type: string
+    required:
+    - key
+    - module
+    type: object
+  controllers.LoginRequest:
+    description: 用户登录请求参数
+    properties:
+      password:
+        description: 密码
+        example: "123456"
+        type: string
+      username:
+        description: 用户名
+        example: admin
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  controllers.LoginResponse:
+    description: 用户登录成功后的响应数据
+    properties:
+      token:
+        description: JWT Token
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/controllers.UserInfo'
+        description: 用户信息
+    type: object
+  controllers.SaveModuleConfigRequest:
+    description: 保存模块配置的请求参数
+    properties:
+      content:
+        description: 内容
+        example: 主要内容
+        type: string
+      description:
+        description: 描述
+        example: 模块描述
+        type: string
+      enabled:
+        description: 是否启用
+        example: true
+        type: boolean
+      extraData:
+        description: 额外数据（JSON 格式）
+        example: '{"key":"value"}'
+        type: string
+      imagePath:
+        description: 图片路径
+        example: /uploads/images/banner.jpg
+        type: string
+      moduleName:
+        description: 模块名称
+        example: banner
+        type: string
+      sortOrder:
+        description: 排序顺序
+        example: 1
+        type: integer
+      subtitle:
+        description: 副标题
+        example: 副标题
+        type: string
+      title:
+        description: 标题
+        example: 标题
+        type: string
+    type: object
+  controllers.UpdateLanguageTextRequest:
+    description: 更新多语言文本的请求参数
+    properties:
+      description:
+        description: 描述说明
+        example: 首页欢迎语
+        type: string
+      enText:
+        description: 英文文本
+        example: Welcome
+        type: string
+      zhText:
+        description: 中文文本
+        example: 欢迎
+        type: string
+    type: object
+  controllers.UpdatePageConfigRequest:
+    description: 更新页面配置的请求参数
+    properties:
+      configData:
+        description: 配置数据（JSON 格式）
+        example: '{"theme":"light"}'
+        type: string
+      pageName:
+        description: 页面名称
+        example: home
+        type: string
+    required:
+    - pageName
+    type: object
+  controllers.UserInfo:
+    description: 登录返回的用户基本信息
+    properties:
+      id:
+        description: 用户 ID
+        type: integer
+      role:
+        description: 用户角色
+        type: string
+      username:
+        description: 用户名
+        type: string
+    type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  models.ContentItem:
+    description: 存储页面内容项，支持多语言和图标
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        description: 描述（向后兼容）
+        example: Description
+        type: string
+      enDescription:
+        description: 英文描述
+        example: We have a professional technical team
+        type: string
+      enTitle:
+        description: 英文标题
+        example: Professional Team
+        type: string
+      icon:
+        description: 图标类名
+        example: fa-users
+        type: string
+      id:
+        type: integer
+      imagePath:
+        description: 图片路径
+        example: /uploads/images/team.jpg
+        type: string
+      section:
+        description: 所属区域/板块
+        example: advantages
+        type: string
+      sortOrder:
+        description: 排序顺序
+        example: 1
+        type: integer
+      title:
+        description: 标题（向后兼容）
+        example: Title
+        type: string
+      updatedAt:
+        type: string
+      zhDescription:
+        description: 中文描述
+        example: 我们拥有专业的技术团队
+        type: string
+      zhTitle:
+        description: 中文标题
+        example: 专业团队
+        type: string
+    type: object
+  models.Image:
+    description: 系统上传的图片资源信息
+    properties:
+      category:
+        description: 分类
+        example: banner
+        type: string
+      createdAt:
+        description: 创建时间
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      deletedAt:
+        allOf:
+        - $ref: '#/definitions/gorm.DeletedAt'
+        description: 删除时间（软删除）
+      description:
+        description: 图片描述
+        example: 首页横幅图片
+        type: string
+      filePath:
+        description: 文件路径
+        example: /uploads/images/banner.jpg
+        type: string
+      fileSize:
+        description: 文件大小（字节）
+        example: 102400
+        type: integer
+      filename:
+        description: 文件名
+        example: banner.jpg
+        type: string
+      id:
+        description: 图片 ID
+        example: 1
+        type: integer
+      longDescription:
+        description: 详细描述
+        example: 这是首页展示的横幅图片
+        type: string
+      sortOrder:
+        description: 排序顺序
+        example: 1
+        type: integer
+      updatedAt:
+        description: 更新时间
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
+  models.LanguageText:
+    description: 存储系统多语言文本，支持版本管理
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        description: 描述说明
+        example: 首页欢迎语
+        type: string
+      enText:
+        description: 英文文本
+        example: Welcome
+        type: string
+      id:
+        type: integer
+      key:
+        description: 文本键（唯一）
+        example: home.welcome
+        type: string
+      module:
+        description: 所属模块
+        example: home
+        type: string
+      updatedAt:
+        type: string
+      version:
+        description: 版本号
+        example: 1
+        type: integer
+      zhText:
+        description: 中文文本
+        example: 欢迎
+        type: string
+    type: object
+  models.LanguageTextVersion:
+    description: 存储多语言文本的历史版本，用于版本回溯
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        description: 描述说明
+        example: 首页欢迎语
+        type: string
+      enText:
+        description: 英文文本
+        example: Welcome
+        type: string
+      id:
+        type: integer
+      key:
+        description: 文本键
+        example: home.welcome
+        type: string
+      languageTextId:
+        description: 关联的 LanguageText ID
+        example: 1
+        type: integer
+      module:
+        description: 所属模块
+        example: home
+        type: string
+      updatedAt:
+        description: 更新时间
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      version:
+        description: 版本号
+        example: 1
+        type: integer
+      zhText:
+        description: 中文文本
+        example: 欢迎
+        type: string
+    type: object
+  models.ModuleConfig:
+    description: 存储各功能模块的配置信息，支持多语言
+    properties:
+      content:
+        description: 内容（向后兼容）
+        example: Content...
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        description: 描述（向后兼容）
+        example: Description
+        type: string
+      enContent:
+        description: 英文内容
+        example: Main content here...
+        type: string
+      enDescription:
+        description: 英文描述
+        example: Module description
+        type: string
+      enSubtitle:
+        description: 英文副标题
+        example: Professional medical device supplier
+        type: string
+      enTitle:
+        description: 英文标题
+        example: Welcome to our website
+        type: string
+      enabled:
+        description: 是否启用
+        example: true
+        type: boolean
+      extraData:
+        description: 额外数据（JSON 格式）
+        example: '{"key":"value"}'
+        type: string
+      id:
+        type: integer
+      imagePath:
+        description: 图片路径
+        example: /uploads/images/module.jpg
+        type: string
+      moduleName:
+        description: 模块名称（唯一）
+        example: banner
+        type: string
+      sortOrder:
+        description: 排序顺序
+        example: 1
+        type: integer
+      subtitle:
+        description: 副标题（向后兼容）
+        example: Subtitle
+        type: string
+      title:
+        description: 标题（向后兼容）
+        example: Title
+        type: string
+      updatedAt:
+        type: string
+      zhContent:
+        description: 中文内容
+        example: 这里是主要内容...
+        type: string
+      zhDescription:
+        description: 中文描述
+        example: 模块描述
+        type: string
+      zhSubtitle:
+        description: 中文副标题
+        example: 专业医疗器械供应商
+        type: string
+      zhTitle:
+        description: 中文标题
+        example: 欢迎来到我们的网站
+        type: string
+    type: object
+  models.PageConfig:
+    description: 存储各页面的配置数据
+    properties:
+      configData:
+        description: 配置数据（JSON 格式）
+        example: '{"theme":"light"}'
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      pageName:
+        description: 页面名称（唯一）
+        example: home
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.SiteSetting:
+    description: 存储站点配置项，键值对形式
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      key:
+        description: 设置键（唯一）
+        example: site.name
+        type: string
+      updatedAt:
+        type: string
+      value:
+        description: 设置值
+        example: Shirley CMS
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+  description: |-
+    医疗器械内容管理系统 API 接口文档
+    提供内容管理、模块配置、图片管理、多语言支持等功能
+  title: Shirley CMS API
+  version: "1.0"
+paths:
+  /api/admin/config:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定页面或所有页面的配置信息
+      parameters:
+      - description: 页面名称，不传则返回所有页面配置
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 页面配置列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.PageConfig'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 获取页面配置
+      tags:
+      - 模块管理
+    put:
+      consumes:
+      - application/json
+      description: 更新指定页面的配置数据
+      parameters:
+      - description: 页面配置更新请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdatePageConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 更新页面配置
+      tags:
+      - 模块管理
+  /api/admin/content:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有或指定区域的内容项列表
+      parameters:
+      - description: 区域名称，不传则返回所有内容项
+        in: query
+        name: section
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 内容项列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.ContentItem'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 获取内容项列表
+      tags:
+      - 内容管理
+    post:
+      consumes:
+      - multipart/form-data
+      description: 创建新的内容项，支持图片上传和多语言
+      parameters:
+      - description: 区域名称
+        in: formData
+        name: section
+        required: true
+        type: string
+      - description: 中文标题
+        in: formData
+        name: zhTitle
+        type: string
+      - description: 英文标题
+        in: formData
+        name: enTitle
+        type: string
+      - description: 中文描述
+        in: formData
+        name: zhDescription
+        type: string
+      - description: 英文描述
+        in: formData
+        name: enDescription
+        type: string
+      - description: 图片文件
+        in: formData
+        name: image
+        type: file
+      - description: 排序顺序
+        in: formData
+        name: sort_order
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ContentItem'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 创建内容项
+      tags:
+      - 内容管理
+  /api/admin/content/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的内容项
+      parameters:
+      - description: 内容项 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "404":
+          description: 内容项不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 删除内容项
+      tags:
+      - 内容管理
+    put:
+      consumes:
+      - multipart/form-data
+      description: 更新指定内容项的信息，支持图片上传和多语言
+      parameters:
+      - description: 内容项 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 区域名称
+        in: formData
+        name: section
+        type: string
+      - description: 中文标题
+        in: formData
+        name: zhTitle
+        type: string
+      - description: 英文标题
+        in: formData
+        name: enTitle
+        type: string
+      - description: 中文描述
+        in: formData
+        name: zhDescription
+        type: string
+      - description: 英文描述
+        in: formData
+        name: enDescription
+        type: string
+      - description: 图片文件
+        in: formData
+        name: image
+        type: file
+      - description: 排序顺序
+        in: formData
+        name: sort_order
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ContentItem'
+              type: object
+        "404":
+          description: 内容项不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 更新内容项
+      tags:
+      - 内容管理
+  /api/admin/images:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有或指定分类的图片列表
+      parameters:
+      - description: 图片分类，不传则返回所有图片
+        in: query
+        name: category
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 图片列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Image'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 获取图片列表
+      tags:
+      - 图片管理
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传单张图片到服务器并记录到数据库
+      parameters:
+      - description: 图片文件
+        in: formData
+        name: image
+        required: true
+        type: file
+      - description: 图片描述
+        in: formData
+        name: description
+        type: string
+      - description: 图片分类
+        in: formData
+        name: category
+        type: string
+      - description: 排序顺序
+        in: formData
+        name: sort_order
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 上传成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Image'
+              type: object
+        "400":
+          description: 未上传文件
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 上传单张图片
+      tags:
+      - 图片管理
+  /api/admin/images/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据图片 ID 删除图片
+      parameters:
+      - description: 图片 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "404":
+          description: 图片不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 删除图片
+      tags:
+      - 图片管理
+    put:
+      consumes:
+      - multipart/form-data
+      description: 更新指定图片的描述、分类等信息，支持重新上传图片
+      parameters:
+      - description: 图片 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 新的图片文件
+        in: formData
+        name: image
+        type: file
+      - description: 图片描述
+        in: formData
+        name: description
+        type: string
+      - description: 图片详细描述
+        in: formData
+        name: long_description
+        type: string
+      - description: 图片分类
+        in: formData
+        name: category
+        type: string
+      - description: 排序顺序
+        in: formData
+        name: sort_order
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Image'
+              type: object
+        "404":
+          description: 图片不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 更新图片信息
+      tags:
+      - 图片管理
+  /api/admin/images/batch:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 批量上传多张图片到服务器
+      parameters:
+      - description: 图片文件数组
+        in: formData
+        name: images
+        required: true
+        type: file
+      - description: 图片分类
+        in: formData
+        name: category
+        type: string
+      - collectionFormat: csv
+        description: 图片描述数组
+        in: formData
+        items:
+          type: string
+        name: descriptions
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 上传成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Image'
+                  type: array
+              type: object
+        "400":
+          description: 未上传文件
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 上传多张图片
+      tags:
+      - 图片管理
+  /api/admin/images/by-filename/{filename}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据图片文件名删除图片
+      parameters:
+      - description: 图片文件名
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "404":
+          description: 图片不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 根据文件名删除图片
+      tags:
+      - 图片管理
+  /api/admin/lang:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定模块或所有模块的多语言文本列表
+      parameters:
+      - description: 模块名称，不传则返回所有模块
+        in: query
+        name: module
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 多语言文本列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.LanguageText'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 获取多语言文本列表
+      tags:
+      - 多语言管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的多语言文本条目
+      parameters:
+      - description: 多语言文本创建请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateLanguageTextRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.LanguageText'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "409":
+          description: 键已存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 创建多语言文本
+      tags:
+      - 多语言管理
+  /api/admin/lang/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的多语言文本
+      parameters:
+      - description: 多语言文本 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "404":
+          description: 多语言文本不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 删除多语言文本
+      tags:
+      - 多语言管理
+    get:
+      consumes:
+      - application/json
+      description: 根据 ID 获取多语言文本详情
+      parameters:
+      - description: 多语言文本 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 多语言文本详情
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.LanguageText'
+              type: object
+        "404":
+          description: 多语言文本不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 获取单个多语言文本
+      tags:
+      - 多语言管理
+    put:
+      consumes:
+      - application/json
+      description: 更新指定多语言文本的内容
+      parameters:
+      - description: 多语言文本 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 多语言文本更新请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateLanguageTextRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.LanguageText'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "404":
+          description: 多语言文本不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 更新多语言文本
+      tags:
+      - 多语言管理
+  /api/admin/lang/{id}/restore/{version}:
+    post:
+      consumes:
+      - application/json
+      description: 将指定多语言文本恢复到某个历史版本
+      parameters:
+      - description: 多语言文本 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 版本号
+        in: path
+        name: version
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 恢复成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.LanguageText'
+              type: object
+        "404":
+          description: 版本不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 恢复多语言文本版本
+      tags:
+      - 多语言管理
+  /api/admin/lang/{id}/versions:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定多语言文本的所有历史版本
+      parameters:
+      - description: 多语言文本 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 版本历史列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.LanguageTextVersion'
+                  type: array
+              type: object
+        "404":
+          description: 多语言文本不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 获取多语言文本版本历史
+      tags:
+      - 多语言管理
+  /api/admin/modules:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有模块或指定模块的配置信息
+      parameters:
+      - description: 模块名称，不传则返回所有模块配置
+        in: query
+        name: module
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 模块配置列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.ModuleConfig'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 获取模块配置列表
+      tags:
+      - 模块管理
+  /api/admin/modules/{name}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据模块名称删除模块配置
+      parameters:
+      - description: 模块名称
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "404":
+          description: 模块配置不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 删除模块配置
+      tags:
+      - 模块管理
+    get:
+      consumes:
+      - application/json
+      description: 根据模块名称获取模块配置详情
+      parameters:
+      - description: 模块名称
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 模块配置详情
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ModuleConfig'
+              type: object
+        "404":
+          description: 模块配置不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 获取单个模块配置
+      tags:
+      - 模块管理
+    put:
+      consumes:
+      - application/json
+      description: 创建或更新模块配置信息，支持表单和 JSON 格式
+      parameters:
+      - description: 模块名称
+        in: path
+        name: moduleName
+        required: true
+        type: string
+      - description: 模块配置数据
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.SaveModuleConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 保存成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ModuleConfig'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 保存模块配置
+      tags:
+      - 模块管理
+  /api/admin/modules/{name}/image:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定模块的关联图片
+      parameters:
+      - description: 模块名称
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "404":
+          description: 模块图片不存在
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 删除模块图片
+      tags:
+      - 模块管理
+  /api/admin/site-settings:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有站点配置项
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 站点设置列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.SiteSetting'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 获取站点设置
+      tags:
+      - 站点设置
+    post:
+      consumes:
+      - multipart/form-data
+      description: 保存站点标题等配置项
+      parameters:
+      - description: 中文站点标题
+        in: formData
+        name: zhSiteTitle
+        type: string
+      - description: 英文站点标题
+        in: formData
+        name: enSiteTitle
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 保存成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.SiteSetting'
+                  type: array
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      security:
+      - APIKey: []
+      summary: 保存站点设置
+      tags:
+      - 站点设置
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: 用户通过用户名和密码登录，返回 JWT Token 和用户信息
+      parameters:
+      - description: 登录请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.LoginResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+        "401":
+          description: 用户名或密码错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      summary: 用户登录
+      tags:
+      - 用户管理
+  /api/public/config:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有页面的公开配置信息（无需认证）
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 页面配置列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.PageConfig'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      summary: 获取公开页面配置
+      tags:
+      - 公开接口
+  /api/public/content:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有或指定区域的公开内容项（无需认证）
+      parameters:
+      - description: 区域名称，不传则返回所有内容项
+        in: query
+        name: section
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 内容项列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.ContentItem'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      summary: 获取公开内容项
+      tags:
+      - 公开接口
+  /api/public/lang:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定模块或所有模块的公开多语言文本（无需认证）
+      parameters:
+      - description: 模块名称，不传则返回所有模块
+        in: query
+        name: module
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 多语言文本列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.LanguageText'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      summary: 获取公开多语言文本
+      tags:
+      - 公开接口
+  /api/public/modules:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有模块的公开配置信息（无需认证）
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 模块配置列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.ModuleConfig'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      summary: 获取公开模块配置
+      tags:
+      - 公开接口
+  /api/public/site-settings:
+    get:
+      consumes:
+      - application/json
+      description: 获取站点配置的公开信息（无需认证）
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 站点设置列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.SiteSetting'
+                  type: array
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/common.APIResponse'
+      summary: 获取公开站点设置
+      tags:
+      - 公开接口
+securityDefinitions:
+  APIKey:
+    description: JWT Token 认证，格式：Bearer {token}
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

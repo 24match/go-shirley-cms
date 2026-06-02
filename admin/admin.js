@@ -44,6 +44,7 @@ async function loadAllConfigs() {
     loadEventsConfig(moduleMap['events'] || configMap['event'] || {});
     loadContactConfig(moduleMap['contact'] || configMap['contact'] || {});
     loadSystemConfig(configMap['brand'], configMap['stats']);
+    loadSiteSettings();
   } catch(e) { console.error('Error loading configs:', e); }
 }
 
@@ -703,18 +704,65 @@ async function deleteLangText(id) {
   if (res.ok) { loadLangTexts(); showToast('删除成功！'); }
 }
 
+async function loadSiteSettings() {
+  try {
+    const res = await apiFetch('/api/admin/site-settings');
+    if (res.ok) {
+      const data = (await res.json()).data || {};
+      document.getElementById('zhSiteTitle').value = data.zhSiteTitle || '';
+      document.getElementById('enSiteTitle').value = data.enSiteTitle || '';
+      document.getElementById('zhSiteLogo').value = data.zhSiteLogo || '';
+      document.getElementById('enSiteLogo').value = data.enSiteLogo || '';
+      document.getElementById('siteLogoColor').value = data.siteLogoColor || '#06a499';
+    }
+  } catch(e) {
+    console.error('Error loading site settings:', e);
+  }
+}
+
+async function saveSiteSettings() {
+  const zhTitle = document.getElementById('zhSiteTitle').value;
+  const enTitle = document.getElementById('enSiteTitle').value;
+  const zhLogo = document.getElementById('zhSiteLogo').value;
+  const enLogo = document.getElementById('enSiteLogo').value;
+  const logoColor = document.getElementById('siteLogoColor').value;
+  
+  if (!zhTitle && !enTitle && !zhLogo && !enLogo) {
+    showToast('至少填写一个字段', 'error');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('zhSiteTitle', zhTitle);
+  formData.append('enSiteTitle', enTitle);
+  formData.append('zhSiteLogo', zhLogo);
+  formData.append('enSiteLogo', enLogo);
+  formData.append('siteLogoColor', logoColor);
+  
+  const res = await apiFetch('/api/admin/site-settings', { method: 'POST', body: formData });
+  if (res.ok) {
+    showToast('网站配置保存成功！');
+    // 重新加载设置以回显数据
+    await loadSiteSettings();
+  } else {
+    const err = await res.json();
+    showToast('保存失败：' + (err.error || '未知错误'), 'error');
+  }
+}
+
 function showSection(sectionId) {
   document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
   document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById(`${sectionId}Section`).classList.add('active');
-  const titles = { banner: '首页Banner配置', about: '关于我们配置', products: '产品展示配置', factory: '工厂实力配置', advantage: '核心优势配置', events: '展会信息配置', contact: '联系我们配置', system: '系统设置', lang: '多语言配置' };
+  const titles = { banner: '首页 Banner 配置', about: '关于我们配置', products: '产品展示配置', factory: '工厂实力配置', advantage: '核心优势配置', events: '展会信息配置', contact: '联系我们配置', system: '系统设置', lang: '多语言配置' };
   document.getElementById('pageTitle').textContent = titles[sectionId] || '配置';
   if (sectionId === 'products') loadProducts();
   if (sectionId === 'factory') loadFactoryItems();
   if (sectionId === 'advantage') loadAdvantageItems();
   if (sectionId === 'lang') loadLangTexts();
   if (sectionId === 'events') initEventsDateValidation();
+  if (sectionId === 'contact') loadContactSubmissions();
   window.location.hash = sectionId;
 }
 
@@ -729,6 +777,134 @@ function initApp() {
       showSection(hash);
     }
   }
+}
+
+// 联系表单提交数据管理
+let contactSubmissionsCurrentPage = 1;
+let contactSubmissionsTotalPage = 1;
+
+// 加载联系表单提交数据
+async function loadContactSubmissions(page = 1) {
+  try {
+    const res = await apiFetch(`/api/admin/contact-submissions?page=${page}&page_size=10`);
+    const responseData = await res.json();
+    
+    if (responseData.code === 200 && responseData.data) {
+      const { list, total, page: currentPage, total_page } = responseData.data;
+      
+      contactSubmissionsCurrentPage = currentPage;
+      contactSubmissionsTotalPage = total_page;
+      
+      // 更新分页信息
+      document.getElementById('contactSubmissionsTotal').textContent = total;
+      document.getElementById('contactSubmissionsCurrentPage').textContent = currentPage;
+      document.getElementById('contactSubmissionsTotalPage').textContent = total_page;
+      
+      // 显示分页控件
+      const paginationEl = document.getElementById('contactSubmissionsPagination');
+      if (total > 0) {
+        paginationEl.style.display = 'block';
+      } else {
+        paginationEl.style.display = 'none';
+      }
+      
+      // 更新按钮状态
+      document.getElementById('contactPrevBtn').disabled = currentPage <= 1;
+      document.getElementById('contactNextBtn').disabled = currentPage >= total_page;
+      
+      // 渲染列表
+      const listEl = document.getElementById('contactSubmissionsList');
+      if (!list || list.length === 0) {
+        listEl.innerHTML = `
+          <div style="text-align:center;color:#999;padding:50px;">
+            <div style="font-size:48px;margin-bottom:15px;">📬</div>
+            <p>暂无提交记录</p>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = `
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f5f5f5;">
+              <th style="padding:12px;text-align:left;border-bottom:2px solid #ddd;">姓名</th>
+              <th style="padding:12px;text-align:left;border-bottom:2px solid #ddd;">邮箱</th>
+              <th style="padding:12px;text-align:left;border-bottom:2px solid #ddd;">公司/国家</th>
+              <th style="padding:12px;text-align:left;border-bottom:2px solid #ddd;">询盘内容</th>
+              <th style="padding:12px;text-align:left;border-bottom:2px solid #ddd;">提交时间</th>
+              <th style="padding:12px;text-align:center;border-bottom:2px solid #ddd;">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      list.forEach(item => {
+        const isRead = item.isRead ? '是' : '否';
+        const readStyle = item.isRead ? 'color:#999;' : 'color:#0a5cad;font-weight:bold;';
+        const date = new Date(item.createdAt).toLocaleString('zh-CN');
+        
+        html += `
+          <tr style="border-bottom:1px solid #f0f0f0;">
+            <td style="padding:12px;${readStyle}">${escapeHtml(item.name)}</td>
+            <td style="padding:12px;">${escapeHtml(item.email)}</td>
+            <td style="padding:12px;">${escapeHtml(item.company || '-')}</td>
+            <td style="padding:12px;max-width:300px;">
+              <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(item.inquiry || '')}">
+                ${escapeHtml(item.inquiry || '-')}
+              </div>
+            </td>
+            <td style="padding:12px;color:#666;">${date}</td>
+            <td style="padding:12px;text-align:center;">
+              <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="deleteContactSubmission(${item.id})">删除</button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table>';
+      listEl.innerHTML = html;
+    }
+  } catch (e) {
+    console.error('Error loading contact submissions:', e);
+    showToast('加载失败', 'error');
+  }
+}
+
+// 切换分页
+function changeContactSubmissionsPage(delta) {
+  const newPage = contactSubmissionsCurrentPage + delta;
+  if (newPage >= 1 && newPage <= contactSubmissionsTotalPage) {
+    loadContactSubmissions(newPage);
+  }
+}
+
+// 删除联系表单提交记录
+async function deleteContactSubmission(id) {
+  if (!confirm('确定要删除这条提交记录吗？')) return;
+  
+  try {
+    const res = await apiFetch(`/api/admin/contact-submissions/${id}`, { method: 'DELETE' });
+    const responseData = await res.json();
+    
+    if (responseData.code === 200) {
+      showToast('删除成功');
+      loadContactSubmissions(contactSubmissionsCurrentPage);
+    } else {
+      showToast('删除失败：' + (responseData.message || '未知错误'), 'error');
+    }
+  } catch (e) {
+    console.error('Error deleting contact submission:', e);
+    showToast('删除失败', 'error');
+  }
+}
+
+// HTML 转义函数
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

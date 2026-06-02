@@ -24,6 +24,8 @@ func InitDB() error {
 		&models.ContentItem{},
 		&models.LanguageText{},
 		&models.LanguageTextVersion{},
+		&models.SiteSetting{},
+		&models.ContactSubmission{},
 	)
 	if err != nil {
 		return err
@@ -31,6 +33,7 @@ func InitDB() error {
 
 	initDefaultUser()
 	initDefaultPageConfig()
+	initDefaultSiteSettings()
 	return nil
 }
 
@@ -84,4 +87,48 @@ func GetAllPageConfigs() ([]models.PageConfig, error) {
 		return nil, err
 	}
 	return configs, nil
+}
+
+func initDefaultSiteSettings() {
+	var count int64
+	DB.Model(&models.SiteSetting{}).Where("key = ?", "zh_site_title").Count(&count)
+	if count == 0 {
+		DB.Create(&models.SiteSetting{
+			Key:   "zh_site_title",
+			Value: "专业医疗器械制造商与出口商",
+		})
+	}
+
+	DB.Model(&models.SiteSetting{}).Where("key = ?", "en_site_title").Count(&count)
+	if count == 0 {
+		DB.Create(&models.SiteSetting{
+			Key:   "en_site_title",
+			Value: "Professional Medical Device Manufacturer & Exporter",
+		})
+	}
+
+	// 初始化默认 Logo 配置
+	DB.Model(&models.SiteSetting{}).Where("key = ?", "zh_site_logo").Count(&count)
+	if count == 0 {
+		DB.Create(&models.SiteSetting{
+			Key:   "zh_site_logo",
+			Value: "医疗",
+		})
+	}
+
+	DB.Model(&models.SiteSetting{}).Where("key = ?", "en_site_logo").Count(&count)
+	if count == 0 {
+		DB.Create(&models.SiteSetting{
+			Key:   "en_site_logo",
+			Value: "MEDICAL",
+		})
+	}
+
+	DB.Model(&models.SiteSetting{}).Where("key = ?", "site_logo_color").Count(&count)
+	if count == 0 {
+		DB.Create(&models.SiteSetting{
+			Key:   "site_logo_color",
+			Value: "#06a499",
+		})
+	}
 }

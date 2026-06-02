@@ -133,6 +133,24 @@ export function setLang(lang) {
         localStorage.setItem('preferredLang', lang);
         document.documentElement.lang = lang;
         applyTranslations();
+        updateSiteTitle();
+    }
+}
+
+async function updateSiteTitle() {
+    try {
+        const res = await fetch('/api/public/site-settings');
+        if (res.ok) {
+            const data = await res.json();
+            const settings = data.data || data;
+            const lang = localStorage.getItem('preferredLang') || 'en';
+            const siteTitle = lang === 'zh' ? settings.zhSiteTitle : settings.enSiteTitle;
+            if (siteTitle) {
+                document.title = siteTitle;
+            }
+        }
+    } catch (err) {
+        console.warn('⚠️ [Site Title] Failed to update site title');
     }
 }
 
@@ -186,4 +204,22 @@ export function initI18n() {
     const savedLang = localStorage.getItem('preferredLang') || 'en';
     setLang(savedLang);
     loadTranslationsFromAPI();
+    loadSiteTitle();
+}
+
+export async function loadSiteTitle() {
+    try {
+        const res = await fetch('/api/public/site-settings');
+        if (res.ok) {
+            const data = await res.json();
+            const settings = data.data || data;
+            const lang = localStorage.getItem('preferredLang') || 'en';
+            const siteTitle = lang === 'zh' ? settings.zhSiteTitle : settings.enSiteTitle;
+            if (siteTitle) {
+                document.title = siteTitle;
+            }
+        }
+    } catch (err) {
+        console.warn('⚠️ [Site Title] Failed to load site title from API, using default');
+    }
 }
