@@ -6,7 +6,13 @@
 
 ### 后端功能
 - **用户认证**: JWT Token 认证，支持登录/登出
-- **权限管理**: 基于用户角色的访问控制
+- **权限管理**: 基于用户角色的访问控制（超级管理员/租户管理员）
+- **多租户支持**: 完整的 SaaS 多租户架构，支持租户隔离
+- **租户配置管理**: 
+  - 功能模块开关配置（图片管理、页面配置、多语言支持等）
+  - 资源配额管理（图片数量、存储空间、内容项数量等）
+  - 订阅计划管理（免费版/专业版/企业版）
+- **配额检查**: 自动配额检查和限制，防止资源超限
 - **图片管理**: 支持图片上传、分类、删除
 - **页面配置**: 动态管理 Banner、关于我们、产品展示等内容
 - **SQLite 内嵌数据库**: 无需额外配置数据库
@@ -20,6 +26,16 @@
 - **直观管理界面**: 简洁易用的管理后台
 - **图片管理**: 上传新图片，按分类管理
 - **页面配置**: 无需修改代码即可修改网站内容
+- **租户管理**（超级管理员）:
+  - 创建/编辑/删除租户
+  - 配置租户功能模块
+  - 设置资源配额
+  - 管理订阅计划
+  - 重置配额使用统计
+- **租户 Dashboard**:
+  - 功能模块状态展示
+  - 资源配额使用情况可视化
+  - 配额警告提示
 
 ## 项目结构
 
@@ -61,6 +77,40 @@ go run main.go
 - 用户名: `admin`
 - 密码: `admin123`
 
+## 租户配置功能
+
+### 功能模块
+系统支持以下功能模块的开关配置：
+
+| 模块 | 说明 |
+|------|------|
+| image_management | 图片管理 |
+| page_config | 页面配置 |
+| multi_language | 多语言支持 |
+| contact_form | 联系表单 |
+| content_management | 内容管理 |
+| analytics | 数据分析 |
+| seo_tools | SEO 工具 |
+
+### 资源配额
+支持以下资源类型的配额管理：
+
+| 资源 | 说明 | 默认值（免费版） |
+|------|------|-----------------|
+| max_images | 图片数量 | 50 |
+| max_storage_mb | 存储空间 (MB) | 512 |
+| max_content_items | 内容项数量 | 50 |
+| max_users | 用户数量 | 5 |
+| max_modules | 模块数量 | 10 |
+| max_languages | 语言数量 | 2 |
+
+### 订阅计划
+| 计划 | 说明 |
+|------|------|
+| free | 免费版 - 基础功能，有限配额 |
+| pro | 专业版 - 全部功能，更高配额 |
+| enterprise | 企业版 - 无限制配额 |
+
 ## API 接口
 
 ### 公开接口
@@ -80,6 +130,28 @@ go run main.go
 | DELETE | /api/admin/images/:id | 删除图片 |
 | GET | /api/admin/config | 获取页面配置 |
 | PUT | /api/admin/config | 更新页面配置 |
+
+### 超级管理员接口（需要超级管理员权限）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /api/superadmin/tenants | 获取租户列表 |
+| POST | /api/superadmin/tenants | 创建租户 |
+| GET | /api/superadmin/tenants/:id | 获取租户详情 |
+| PUT | /api/superadmin/tenants/:id | 更新租户 |
+| DELETE | /api/superadmin/tenants/:id | 删除租户 |
+| GET | /api/superadmin/tenants/:id/config | 获取租户配置 |
+| PUT | /api/superadmin/tenants/:id/config | 更新租户配置 |
+| POST | /api/superadmin/tenants/:id/quota/reset | 重置配额 |
+| GET | /api/superadmin/tenants/:id/quota/usage | 获取配额使用情况 |
+
+### 租户接口（需要租户管理员权限）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /api/tenant/config | 获取当前租户配置 |
+| GET | /api/tenant/features | 获取功能模块状态 |
+| GET | /api/tenant/quota | 获取配额使用情况 |
 
 ## 使用说明
 

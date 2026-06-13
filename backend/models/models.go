@@ -293,3 +293,94 @@ type ContactSubmission struct {
 	// 是否已读
 	IsRead bool `gorm:"default:false" json:"isRead" example:"false"`
 }
+
+// TenantConfig 租户配置模型
+// @Description 存储租户级别的配置信息，包括功能模块开关、资源配额、订阅计划
+// @ID TenantConfig
+// @Tags Models
+type TenantConfig struct {
+	// GORM 自动管理的 ID
+	gorm.Model
+	// 租户 ID（唯一关联）
+	TenantID uint `gorm:"uniqueIndex;not null" json:"tenant_id" example:"1"`
+	// 功能模块配置（JSON 格式）
+	// 结构：{"image_management": true, "page_config": true, "multi_language": false, ...}
+	FeatureFlags string `gorm:"type:text" json:"feature_flags" example:"{\"image_management\":true,\"page_config\":true}"`
+	// 资源配额配置（JSON 格式）
+	// 结构：{"max_images": 100, "max_storage_mb": 1024, "max_content_items": 50, "max_users": 5}
+	ResourceQuota string `gorm:"type:text" json:"resource_quota" example:"{\"max_images\":100,\"max_storage_mb\":1024}"`
+	// 资源使用统计（JSON 格式）
+	// 结构：{"used_images": 45, "used_storage_mb": 512, "used_content_items": 20, "used_users": 3}
+	ResourceUsage string `gorm:"type:text" json:"resource_usage" example:"{\"used_images\":45,\"used_storage_mb\":512}"`
+	// 订阅计划（free/pro/enterprise）
+	SubscriptionPlan string `gorm:"default:'free'" json:"subscription_plan" example:"free"`
+	// 订阅过期时间
+	SubscriptionExpiresAt *time.Time `json:"subscription_expires_at,omitempty" example:"2025-12-31T23:59:59Z"`
+	// 租户关联（可选，用于预加载）
+	Tenant Tenant `gorm:"foreignKey:TenantID" json:"tenant,omitempty"`
+}
+
+// TenantConfigDTO 租户配置数据传输对象
+// @Description 租户配置数据传输对象，用于 API 响应
+// @ID TenantConfigDTO
+// @Tags Models
+type TenantConfigDTO struct {
+	// 配置 ID
+	ID uint `json:"id" example:"1"`
+	// 租户 ID
+	TenantID uint `json:"tenant_id" example:"1"`
+	// 功能模块配置
+	FeatureFlags map[string]bool `json:"feature_flags" example:"{\"image_management\":true,\"page_config\":true}"`
+	// 资源配额配置
+	ResourceQuota map[string]int `json:"resource_quota" example:"{\"max_images\":100,\"max_storage_mb\":1024}"`
+	// 资源使用统计
+	ResourceUsage map[string]int `json:"resource_usage" example:"{\"used_images\":45,\"used_storage_mb\":512}"`
+	// 订阅计划
+	SubscriptionPlan string `json:"subscription_plan" example:"free"`
+	// 订阅过期时间
+	SubscriptionExpiresAt *time.Time `json:"subscription_expires_at,omitempty"`
+}
+
+// UpdateTenantConfigRequest 更新租户配置请求
+// @Description 更新租户配置请求体
+// @ID UpdateTenantConfigRequest
+// @Tags Models
+type UpdateTenantConfigRequest struct {
+	// 功能模块配置
+	FeatureFlags map[string]bool `json:"feature_flags"`
+	// 资源配额配置
+	ResourceQuota map[string]int `json:"resource_quota"`
+	// 订阅计划
+	SubscriptionPlan string `json:"subscription_plan"`
+	// 订阅过期时间
+	SubscriptionExpiresAt *time.Time `json:"subscription_expires_at,omitempty"`
+}
+
+// GetFeatureFlags 解析功能模块配置为 map
+func (tc *TenantConfig) GetFeatureFlags() map[string]bool {
+	flags := make(map[string]bool)
+	if tc.FeatureFlags == "" {
+		return flags
+	}
+	// 简单 JSON 解析，实际项目中可使用 encoding/json
+	// 这里使用占位实现，实际服务层会正确处理
+	return flags
+}
+
+// GetResourceQuota 解析资源配额为 map
+func (tc *TenantConfig) GetResourceQuota() map[string]int {
+	quota := make(map[string]int)
+	if tc.ResourceQuota == "" {
+		return quota
+	}
+	return quota
+}
+
+// GetResourceUsage 解析资源使用统计为 map
+func (tc *TenantConfig) GetResourceUsage() map[string]int {
+	usage := make(map[string]int)
+	if tc.ResourceUsage == "" {
+		return usage
+	}
+	return usage
+}

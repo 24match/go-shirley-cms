@@ -11,13 +11,17 @@ import (
 
 // TenantController 租户管理控制器
 type TenantController struct {
-	userService *services.UserService
+	userService         *services.UserService
+	tenantConfigService *services.TenantConfigService
+	quotaService        *services.QuotaService
 }
 
 // NewTenantController 创建租户管理控制器实例
 func NewTenantController() *TenantController {
 	return &TenantController{
-		userService: services.NewUserService(),
+		userService:         services.NewUserService(),
+		tenantConfigService: services.NewTenantConfigService(),
+		quotaService:        services.NewQuotaService(),
 	}
 }
 
@@ -274,5 +278,110 @@ func (ctrl *TenantController) UpdateDomainConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code":    "SUCCESS",
 		"message": "域名配置更新功能待实现",
+	})
+}
+
+// GetTenantConfig 获取当前租户配置
+// @Summary 获取当前租户配置信息
+// @Tags 租户管理 - 配置管理
+// @Accept json
+// @Produce json
+// @Success 200 {object} services.TenantConfigDTO
+// @Router /api/tenant/config [get]
+func (ctrl *TenantController) GetTenantConfig(c *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(c)
+	if !exists {
+		c.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
+	config, err := ctrl.tenantConfigService.GetTenantConfig(c, tenantID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code":    "CONFIG_NOT_FOUND",
+			"message": "租户配置不存在",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    "SUCCESS",
+		"message": "获取租户配置成功",
+		"data":    config,
+	})
+}
+
+// GetFeatures 获取当前租户功能模块状态
+// @Summary 获取当前租户功能模块状态
+// @Tags 租户管理 - 配置管理
+// @Accept json
+// @Produce json
+// @Success 200 {object} gin.H
+// @Router /api/tenant/features [get]
+func (ctrl *TenantController) GetFeatures(c *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(c)
+	if !exists {
+		c.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
+	features, err := ctrl.tenantConfigService.GetFeatures(c, tenantID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    "GET_FEATURES_FAILED",
+			"message": "获取功能模块状态失败",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    "SUCCESS",
+		"message": "获取功能模块状态成功",
+		"data":    features,
+	})
+}
+
+// GetQuota 获取当前租户配额使用情况
+// @Summary 获取当前租户配额使用情况
+// @Tags 租户管理 - 配置管理
+// @Accept json
+// @Produce json
+// @Success 200 {object} gin.H
+// @Router /api/tenant/quota [get]
+func (ctrl *TenantController) GetQuota(c *gin.Context) {
+	tenantID, exists := middleware.GetTenantIDFromContext(c)
+	if !exists {
+		c.JSON(http.StatusForbidden, gin.H{
+			"code":    "TENANT_REQUIRED",
+			"message": "租户上下文不存在",
+		})
+		return
+	}
+
+	quota, usage, err := ctrl.tenantConfigService.GetQuotaUsage(c, tenantID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    "GET_QUOTA_FAILED",
+			"message": "获取配额使用情况失败",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    "SUCCESS",
+		"message": "获取配额使用情况成功",
+		"data": gin.H{
+			"quota": quota,
+			"usage": usage,
+		},
 	})
 }

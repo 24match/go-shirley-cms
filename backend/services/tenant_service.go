@@ -97,6 +97,13 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *CreateTenantReque
 		}
 	}
 
+	// 创建租户默认配置
+	tenantConfigService := NewTenantConfigService()
+	if err := tenantConfigService.CreateDefaultConfig(ctx, tenant.ID, tenant.SubscriptionPlan); err != nil {
+		// 配置创建失败不影响租户创建，仅记录日志
+		// 实际项目中应使用日志记录
+	}
+
 	return &tenant, nil
 }
 

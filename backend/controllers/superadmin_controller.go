@@ -12,15 +12,19 @@ import (
 
 // SuperAdminController 超级管理员控制器
 type SuperAdminController struct {
-	tenantService *services.TenantService
-	userService   *services.UserService
+	tenantService       *services.TenantService
+	userService         *services.UserService
+	tenantConfigService *services.TenantConfigService
+	quotaService        *services.QuotaService
 }
 
 // NewSuperAdminController 创建超级管理员控制器实例
 func NewSuperAdminController() *SuperAdminController {
 	return &SuperAdminController{
-		tenantService: services.NewTenantService(),
-		userService:   services.NewUserService(),
+		tenantService:       services.NewTenantService(),
+		userService:         services.NewUserService(),
+		tenantConfigService: services.NewTenantConfigService(),
+		quotaService:        services.NewQuotaService(),
 	}
 }
 
@@ -339,6 +343,161 @@ func (ctrl *SuperAdminController) GetSystemStats(c *gin.Context) {
 		"message": "获取系统统计成功",
 		"data": gin.H{
 			"message": "系统统计功能待实现",
+		},
+	})
+}
+
+// GetTenantConfig 获取租户配置
+// @Summary 获取租户配置信息
+// @Tags 超级管理员 - 租户配置管理
+// @Accept json
+// @Produce json
+// @Param id path int true "租户 ID"
+// @Success 200 {object} services.TenantConfigDTO
+// @Router /api/superadmin/tenants/:id/config [get]
+func (ctrl *SuperAdminController) GetTenantConfig(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    "INVALID_ID",
+			"message": "无效的租户 ID",
+		})
+		return
+	}
+
+	config, err := ctrl.tenantConfigService.GetTenantConfig(c, uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code":    "CONFIG_NOT_FOUND",
+			"message": "租户配置不存在",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    "SUCCESS",
+		"message": "获取租户配置成功",
+		"data":    config,
+	})
+}
+
+// UpdateTenantConfig 更新租户配置
+// @Summary 更新租户配置信息
+// @Tags 超级管理员 - 租户配置管理
+// @Accept json
+// @Produce json
+// @Param id path int true "租户 ID"
+// @Param config body services.UpdateTenantConfigRequest true "配置信息"
+// @Success 200 {object} services.TenantConfigDTO
+// @Router /api/superadmin/tenants/:id/config [put]
+func (ctrl *SuperAdminController) UpdateTenantConfig(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    "INVALID_ID",
+			"message": "无效的租户 ID",
+		})
+		return
+	}
+
+	var req services.UpdateTenantConfigRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    "INVALID_REQUEST",
+			"message": "请求参数无效",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	config, err := ctrl.tenantConfigService.UpdateTenantConfig(c, uint(id), &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    "UPDATE_CONFIG_FAILED",
+			"message": "更新租户配置失败",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    "SUCCESS",
+		"message": "更新租户配置成功",
+		"data":    config,
+	})
+}
+
+// ResetQuota 重置租户配额使用统计
+// @Summary 重置租户配额使用统计
+// @Tags 超级管理员 - 租户配置管理
+// @Accept json
+// @Produce json
+// @Param id path int true "租户 ID"
+// @Param resourceType query string false "资源类型（不传则重置所有）"
+// @Success 200 {object} gin.H
+// @Router /api/superadmin/tenants/:id/quota/reset [post]
+func (ctrl *SuperAdminController) ResetQuota(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    "INVALID_ID",
+			"message": "无效的租户 ID",
+		})
+		return
+	}
+
+	resourceType := c.Query("resourceType")
+
+	if err := ctrl.tenantConfigService.ResetQuotaUsage(c, uint(id), resourceType); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    "RESET_QUOTA_FAILED",
+			"message": "重置配额失败",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    "SUCCESS",
+		"message": "重置配额成功",
+	})
+}
+
+// GetQuotaUsage 获取租户配额使用情况
+// @Summary 获取租户配额使用情况
+// @Tags 超级管理员 - 租户配置管理
+// @Accept json
+// @Produce json
+// @Param id path int true "租户 ID"
+// @Success 200 {object} gin.H
+// @Router /api/superadmin/tenants/:id/quota/usage [get]
+func (ctrl *SuperAdminController) GetQuotaUsage(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    "INVALID_ID",
+			"message": "无效的租户 ID",
+		})
+		return
+	}
+
+	quota, usage, err := ctrl.tenantConfigService.GetQuotaUsage(c, uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code":    "QUOTA_NOT_FOUND",
+			"message": "配额信息不存在",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    "SUCCESS",
+		"message": "获取配额使用情况成功",
+		"data": gin.H{
+			"quota": quota,
+			"usage": usage,
 		},
 	})
 }

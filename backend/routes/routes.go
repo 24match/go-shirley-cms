@@ -43,9 +43,9 @@ func RegisterRoutes(r *gin.Engine) {
 
 	r.Static("/uploads", "./uploads")
 	r.Static("/frontend", "./frontend")
-	r.StaticFile("/", "./inde.html")
-	r.StaticFile("/i18n.js", "./i18n.js")
 	r.Static("/admin", "./admin")
+	r.StaticFile("/", "./frontend/index.html")
+	r.StaticFile("/i18n.js", "./i18n.js")
 
 	// 注册 Swagger UI 路由（仅开发环境）
 	// @description 访问 /swagger/index.html 查看交互式 API 文档
@@ -91,6 +91,12 @@ func registerSuperAdminRoutes(api *gin.RouterGroup) {
 	superadmin.POST("/tenants/:id/disable", controllers.NewSuperAdminController().DisableTenant)
 	superadmin.POST("/tenants/:id/impersonate", controllers.NewSuperAdminController().ImpersonateTenant)
 
+	// 租户配置管理
+	superadmin.GET("/tenants/:id/config", controllers.NewSuperAdminController().GetTenantConfig)
+	superadmin.PUT("/tenants/:id/config", controllers.NewSuperAdminController().UpdateTenantConfig)
+	superadmin.POST("/tenants/:id/quota/reset", controllers.NewSuperAdminController().ResetQuota)
+	superadmin.GET("/tenants/:id/quota/usage", controllers.NewSuperAdminController().GetQuotaUsage)
+
 	// 系统统计
 	superadmin.GET("/stats", controllers.NewSuperAdminController().GetSystemStats)
 }
@@ -110,6 +116,11 @@ func registerTenantRoutes(api *gin.RouterGroup) {
 	// 域名管理
 	tenant.GET("/domain", controllers.NewTenantController().GetDomainConfig)
 	tenant.PUT("/domain", controllers.NewTenantController().UpdateDomainConfig)
+
+	// 租户配置管理
+	tenant.GET("/config", controllers.NewTenantController().GetTenantConfig)
+	tenant.GET("/features", controllers.NewTenantController().GetFeatures)
+	tenant.GET("/quota", controllers.NewTenantController().GetQuota)
 }
 
 func registerAdminRoutes(api *gin.RouterGroup) {

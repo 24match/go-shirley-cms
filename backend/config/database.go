@@ -36,6 +36,7 @@ func InitDB() error {
 		&models.LanguageTextVersion{},
 		&models.SiteSetting{},
 		&models.ContactSubmission{},
+		&models.TenantConfig{},
 	)
 	if err != nil {
 		return err
@@ -43,6 +44,9 @@ func InitDB() error {
 
 	// 执行 SaaS 迁移（如果需要）
 	MigrateToSaaS()
+	
+	// 初始化租户配置
+	InitTenantConfigs()
 
 	// 初始化默认数据
 	initDefaultUser()
@@ -182,6 +186,29 @@ func GetAllPageConfigs() ([]models.PageConfig, error) {
 		return nil, err
 	}
 	return configs, nil
+}
+
+// InitTenantConfigs 为所有租户初始化配置记录
+func InitTenantConfigs() {
+	var tenants []models.Tenant
+	DB.Find(&tenants)
+	
+	for _, tenant := range tenants {
+		var config models.TenantConfig
+		DB.Where("tenant_id = ?", tenant.ID).First(&config)
+		if config.ID == 0 {
+			// 创建默认配置
+			defaultConfig := &models.TenantConfig{
+				TenantID: tenant.ID,
+				FeatureFlags: `{"image_management":true,"page_config":true,"multi_language":true,"contact_form":true,"content_management":true}`,
+				ResourceQuota: `{"max_images":50,"max_storage_mb":512,"max_content_items":20,"max_users":3}`,
+				ResourceUsage: `{"used_images":0,"used_storage_mb":0,"used_content_items":0,"used_users":0}`,
+				SubscriptionPlan: tenant.SubscriptionPlan,
+				SubscriptionExpiresAt: tenant.SubscriptionExpiresAt,
+			}
+			DB.Create(defaultConfig)
+		}
+	}
 }
 
 func initDefaultSiteSettings() {
